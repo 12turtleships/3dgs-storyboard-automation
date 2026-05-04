@@ -24,51 +24,53 @@ def create_world() -> Optional[str]:
             "disable_recaption": False
         },
         "display_name": "Tree_Scene_01_Monolith",
-        "model": "marble-1.0-draft"  # Using 230 credits for the initial test
+        "model": "marble-1.0-draft"  # 230 credits
     }
 
     response = requests.post(f"{BASE_URL}/worlds:generate", headers=HEADERS, json=payload)
 
     if response.status_code in {200, 201, 202}:
-        world_id = response.json().get("world_id")
-        print(f"✅ Generation started successfully. World ID: {world_id}")
-        return world_id
+        data = response.json()
+        operation_id = data.get("operation_id")
+        print(f"✅ Generation started. Operation ID: {operation_id}")
+        return operation_id
     else:
-        print(f"❌ Error initiating generation: {response.text}")
+        print(f"❌ Error initiating generation: {response.status_code} {response.text}")
         return None
 
-def poll_for_completion(world_id: str, poll_interval: int = 15) -> Dict:
-    """Polls the GET endpoint until the generation status is complete."""
-    print(f"⏳ Polling status every {poll_interval} seconds...")
+def poll_for_completion(operation_id: str, poll_interval: int = 15) -> Dict:
+    """Polls the operations endpoint until done."""
+    print(f"⏳ Polling every {poll_interval}s...")
 
     while True:
-        response = requests.get(f"{BASE_URL}/worlds/{world_id}", headers=HEADERS)
+        response = requests.get(f"{BASE_URL}/operations/{operation_id}", headers=HEADERS)
         data = response.json()
 
-        status = data.get("status", "unknown").lower()
-
-        if status == "completed":
+        if data.get("done"):
+            if data.get("error"):
+                raise Exception(f"Generation failed: {data['error']}")
             print("\n🎉 Generation Complete!")
-            return data
-        elif status == "failed":
-            raise Exception(f"Generation failed: {data.get('error_message', 'Unknown error')}")
+            return data.get("response", {})
 
-        # Print a simple loading indicator
         print(".", end="", flush=True)
         time.sleep(poll_interval)
 
 if __name__ == "__main__":
     if API_KEY == "YOUR_API_KEY_HERE":
-        print("⚠️ Please insert your API key or set the WLT_API_KEY environment variable.")
+        print("⚠️ Please set WLT_API_KEY in your .env file.")
     else:
-        world_id = create_world()
-        if world_id:
-            final_data = poll_for_completion(world_id)
+        operation_id = create_world()
+        if operation_id:
+            final_data = poll_for_completion(operation_id)
 
-            # Extract and print the critical asset URLs
             assets = final_data.get("assets", {})
+            spz_urls = assets.get("splats", {}).get("spz_urls", {})
             print("\n--- 💾 ASSET DOWNLOAD LINKS ---")
-            print(f"Web Viewer URL: {final_data.get('world_marble_url')}")
-            print(f"Gaussian Splat (.spz): {assets.get('splats', {}).get('spz_urls', {}).get('main')}")
-            print(f"Collision Mesh (.glb): {assets.get('mesh', {}).get('collider_mesh_url')}")
-            print(f"Base Panorama (.jpg): {assets.get('imagery', {}).get('pano_url')}")
+            print(f"Web Viewer URL:          {final_data.get('world_marble_url')}")
+            print(f"Collision Mesh (.glb):   {assets.get('mesh', {}).get('collider_mesh_url')}")
+            print(f"Thumbnail (.webp):       {assets.get('thumbnail_url')}")
+            print(f"Splat full_res (.spz):   {spz_urls.get('full_res')}")
+            print(f"Splat 500k (.spz):       {spz_urls.get('500k')}")
+            print(f"Splat 100k (.spz):       {spz_urls.get('100k')}")
+            print(f"Base Panorama (.jpg):    {assets.get('imagery', {}).get('pano_url')}")
+            print(f"\nWorld ID: {final_data.get('world_id')}")
