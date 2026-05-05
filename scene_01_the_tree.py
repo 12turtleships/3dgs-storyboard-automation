@@ -33,10 +33,10 @@ SHOTS: List[Dict] = [
             "Sweeping ultra-wide establishing shot of a grand university campus at golden hour. "
             "A colossal ancient oak tree dominates the center of an open stone courtyard, its massive "
             "trunk and vast sprawling canopy dwarfing the surrounding Gothic and modernist university "
-            "architecture. Warm amber and gold autumn leaves catch the late afternoon sun. Long dramatic "
+            "architecture. Lush deep green summer leaves catch the late afternoon sun. Long dramatic "
             "shadows stretch across the cobblestone path. The tree radiates quiet, undeniable presence. "
             "No people visible — a moment of pure natural beauty before the world intrudes. "
-            "70mm film look, anamorphic lens flare, hyper-realistic, cinematic, golden tones, epic scale."
+            "70mm film look, anamorphic lens flare, hyper-realistic, cinematic, lush green summer palette, epic scale."
         ),
     },
     {
@@ -58,9 +58,9 @@ SHOTS: List[Dict] = [
         "display_name": "Tree_S01_1C_Canopy",
         "prompt": (
             "Looking up through the vast canopy of an ancient oak tree, thousands of golden and green "
-            "autumn leaves filtering brilliant sunlight into scattered rays and soft bokeh. The canopy "
+            "lush green summer leaves filtering brilliant sunlight into scattered rays and soft bokeh. The canopy "
             "forms a natural cathedral ceiling — transcendent, sacred, breathtaking. Patches of deep blue "
-            "sky visible between the leaves. Light is warm, golden, glowing. The effect is spiritual and "
+            "sky visible between the leaves. Light is bright and warm, vibrant green glow. The effect is spiritual and "
             "beautiful. No people. "
             "70mm film look, shallow depth of field, warm luminous tones, hyper-realistic, cinematic."
         ),
@@ -84,12 +84,12 @@ SHOTS: List[Dict] = [
         "display_name": "Tree_S01_1E_Oblivious",
         "prompt": (
             "Wide shot of a beautiful university campus courtyard, the majestic ancient oak tree standing "
-            "glorious and enormous in the center background, its canopy golden in morning light. "
+            "glorious and enormous in the center background, its canopy full and richly green in summer morning light. "
             "In the foreground and midground, streams of university students flow past on the cobblestone "
             "path — every single one with their head bowed down, face illuminated by the glow of a "
             "smartphone screen. The contrast is stark: overwhelming natural beauty behind them, complete "
             "digital oblivion in front. The tree is sharp and magnificent; the students are slightly soft. "
-            "70mm film look, cinematic wide, golden hour, hyper-realistic, melancholy and ironic tone."
+            "70mm film look, cinematic wide, bright summer morning, hyper-realistic, melancholy and ironic tone."
         ),
     },
 ]
