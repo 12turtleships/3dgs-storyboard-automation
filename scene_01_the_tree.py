@@ -4,6 +4,8 @@ import requests
 from typing import Dict, Optional, List
 from dotenv import load_dotenv
 
+from story_plot import WHO, WHERE, WHEN, STYLE_SUFFIX, build_prompt
+
 load_dotenv()
 
 API_KEY = os.environ.get("WLT_API_KEY", "YOUR_API_KEY_HERE")
@@ -30,70 +32,30 @@ MASTER_PANO_URL = os.environ.get("MASTER_PANO_URL")
 #        Reference: the monolith reveal sequence, 2001: A Space Odyssey.
 # =============================================================================
 
-_STYLE = (
-    "Storyboard illustration style, not photorealistic, no live actors. "
-    "Semi-painterly digital art with clean linework, expressive human figures, "
-    "and highly detailed natural elements especially trees and light. "
-    "Rich summer color palette: deep greens, warm stone, golden light. "
-    "Cinematic composition with dramatic depth and layered foreground-midground-background. "
-    "Visible brushwork, warm paper grain, film grain overlay. "
-    "Animated pre-visualization quality. Clear storytelling in a single frame."
-)
-
-_TREE = (
-    "Ancient English Oak, 80-100 feet tall, trunk 12+ feet in diameter, deep charcoal-grey "
-    "heavily furrowed bark with patches of lichen and moss at the base. "
-    "Massive broad umbrella-like canopy of lush dense deep emerald-green summer leaves. "
-    "Monolithic, immobile, permanent — the most detailed element in every frame."
-)
-
-_STUDENTS = (
-    "University students ages 18-24, diverse group, all uniformly slouched with heads bowed "
-    "to glowing smartphone screens. Faces lit identically by screen glow. "
-    "Moving by rote muscle memory, zero eye contact with surroundings. "
-    "Backpacks, hoodies, mixed casual university attire."
-)
-
-_COURTYARD = (
-    "Central university courtyard: large open stone square, ancient cobblestones in grey and tan "
-    "worn smooth by decades of foot traffic, five pathways radiating outward, "
-    "surrounding warm stone Gothic and modernist university buildings, ivy-covered walls, tall arched windows. "
-    "Tree roots crack and lift the cobblestones — nature reclaiming human space."
-)
-
-_EARLY_MORNING = (
-    "Early morning, 7-9 AM. Low-angle golden side-light, long shadows across the courtyard. "
-    "Soft warm directional light. Clear bright blue sky. "
-    "Tree dramatically side-lit, trunk texture and bark fully visible."
-)
-
-_MID_MORNING = (
-    "Mid-morning, 9 AM - 12 PM. Sun higher, shadows shorter, bright high-contrast summer daylight. "
-    "Brilliant deep blue sky. Tree canopy brightly lit from above."
-)
-
-
 SHOTS: List[Dict] = [
     {
         "id": "1A",
         "label": "Full Campus — The Entire World Revealed",
         "display_name": "Tree_S01_1A_Campus",
         "who": "None — no characters.",
-        "where": "Full campus overhead",
-        "when": "Early morning",
-        "prompt": (
-            "Overhead aerial view revealing the entire university campus in one sweeping frame — "
-            "the complete world of the film introduced at once. "
-            "The campus fills the frame: warm stone Gothic and modernist buildings, "
-            "ivy-covered walls, cobblestone courtyards, winding pathways, an open green recreational field. "
-            f"{_COURTYARD} "
-            "At the absolute center, the colossal ancient oak tree — its vast emerald canopy "
-            "towers above all architecture, the undeniable heart of this world. "
-            "All campus locations visible from this god's-eye perspective. "
-            "No people visible. The campus breathes on its own. "
-            f"{_EARLY_MORNING} "
-            "Epic, serene, and full of quiet beauty waiting to be discovered. "
-            f"{_STYLE}"
+        "where": "courtyard",
+        "when": "early_morning",
+        "prompt": build_prompt(
+            narrative=(
+                "Overhead aerial view revealing the entire university campus in one sweeping frame — "
+                "the complete world of the film introduced at once."
+            ),
+            visual=(
+                "The campus fills the frame: warm stone Gothic and modernist buildings, "
+                "ivy-covered walls, cobblestone courtyards, winding pathways, an open green recreational field. "
+                f"{WHERE['courtyard']} "
+                "At the absolute center, the colossal ancient oak tree — its vast emerald canopy "
+                "towers above all architecture, the undeniable heart of this world. "
+                "All campus locations visible from this god's-eye perspective."
+            ),
+            characters="No people visible. The campus breathes on its own.",
+            lighting_key="early_morning",
+            tone="Epic, serene, and full of quiet beauty waiting to be discovered.",
         ),
     },
     {
@@ -101,98 +63,108 @@ SHOTS: List[Dict] = [
         "label": "Courtyard Wide — Tree as Undeniable Center",
         "display_name": "Tree_S01_1B_Courtyard",
         "who": "None.",
-        "where": "Central courtyard",
-        "when": "Early morning",
-        "prompt": (
-            "Ground-level wide shot of the central courtyard — descended into the world. "
-            f"{_COURTYARD} "
-            "The tree occupies the center third of the frame from ground to top of canopy. "
-            "Pathways radiate left and right. Buildings frame the background. "
-            "Foreground: cobblestones and gnarled roots. Anamorphic lens flare from low morning sun. "
-            "No people. The courtyard is entirely the tree's. "
-            f"{_EARLY_MORNING} "
-            "Reverent, quiet, monumental. "
-            f"{_STYLE}"
+        "where": "courtyard",
+        "when": "early_morning",
+        "prompt": build_prompt(
+            narrative="Ground-level wide shot of the central courtyard — descended into the world.",
+            visual=(
+                f"{WHERE['courtyard']} "
+                "The tree occupies the center third of the frame from ground to top of canopy. "
+                "Pathways radiate left and right. Buildings frame the background. "
+                "Foreground: cobblestones and gnarled roots. Anamorphic lens flare from low morning sun."
+            ),
+            characters="No people. The courtyard is entirely the tree's.",
+            lighting_key="early_morning",
+            tone="Reverent, quiet, monumental.",
         ),
     },
     {
         "id": "1C",
         "label": "Worm's Eye — The Monolith Reveal",
         "display_name": "Tree_S01_1C_Monolith",
-        "who": "The Tree only.",
-        "where": "Under the tree",
-        "when": "Early morning",
-        "prompt": (
-            "Extreme low angle worm's-eye view looking straight up the trunk — the tree as monolith. "
-            f"{_TREE} "
-            "Trunk fills the entire frame from bottom edge, rising impossibly tall like a cathedral column. "
-            "Branches reach outward like arms against the deep blue summer sky. "
-            "No humans. Only bark, branches, sky. "
-            f"{_EARLY_MORNING} "
-            "Awe-inspiring, sacred, slightly overwhelming — small against something enormous. "
-            f"{_STYLE}"
+        "who": "tree",
+        "where": "under_tree",
+        "when": "early_morning",
+        "prompt": build_prompt(
+            narrative=(
+                "Extreme low angle worm's-eye view looking straight up the trunk — "
+                "the tree revealed as a monolith."
+            ),
+            visual=(
+                f"{WHO['tree']} "
+                "Trunk fills the entire frame from bottom edge, rising impossibly tall like a cathedral column. "
+                "Branches reach outward like arms against the deep blue summer sky."
+            ),
+            characters="No humans. Only bark, branches, sky.",
+            lighting_key="early_morning",
+            tone="Awe-inspiring, sacred, slightly overwhelming — small against something enormous.",
         ),
     },
     {
         "id": "1D",
         "label": "Canopy Upshot — Natural Cathedral",
         "display_name": "Tree_S01_1D_Canopy",
-        "who": "The Tree only.",
-        "where": "Under the tree",
-        "when": "Mid-morning",
-        "prompt": (
-            "Looking up through the canopy — the tree becomes a cathedral of light and green. "
-            "Thousands of lush deep emerald-green summer leaves filter brilliant sunlight "
-            "into scattered rays, volumetric light beams, and soft bokeh. "
-            "Canopy forms a vaulted ceiling of nature. "
-            "Patches of brilliant deep blue sky between the leaves. "
-            "No people. Pure tree and sky. "
-            f"{_MID_MORNING} "
-            "Transcendent, sacred, breathtaking — the most beautiful thing in the film. "
-            f"{_STYLE}"
+        "who": "tree",
+        "where": "under_tree",
+        "when": "mid_morning",
+        "prompt": build_prompt(
+            narrative="Looking up through the canopy — the tree becomes a cathedral of light and green.",
+            visual=(
+                "Thousands of lush deep emerald-green summer leaves filter brilliant sunlight "
+                "into scattered rays, volumetric light beams, and soft bokeh. "
+                "Canopy forms a vaulted ceiling of nature. "
+                "Patches of brilliant deep blue sky between the leaves."
+            ),
+            characters="No people. Pure tree and sky.",
+            lighting_key="mid_morning",
+            tone="Transcendent, sacred, breathtaking — the most beautiful thing in the film.",
         ),
     },
     {
         "id": "1E",
         "label": "Root Level — Nature Reclaiming Stone",
         "display_name": "Tree_S01_1E_Roots",
-        "who": "The Tree only.",
-        "where": "Central courtyard, ground level",
-        "when": "Early morning",
-        "prompt": (
-            "Ground-level detail — the tree's roots cracking and lifting the cobblestones, "
-            "nature quietly reclaiming the campus from the ground up. "
-            "Massive gnarled roots spread across ancient cobblestones in the foreground, "
-            "cracking and lifting the stone — beautiful and unstoppable. "
-            "Moss and lichen on the north-facing root surfaces. "
-            "Trunk rises powerfully from frame bottom. "
-            "Behind it: warm stone university buildings, ivy walls, arched windows. "
-            "No people. The tree owns this ground. "
-            f"{_EARLY_MORNING} "
-            "Peaceful, timeless, quietly powerful — patience made visible. "
-            f"{_STYLE}"
+        "who": "tree",
+        "where": "courtyard",
+        "when": "early_morning",
+        "prompt": build_prompt(
+            narrative=(
+                "Ground-level detail — the tree's roots cracking and lifting the cobblestones, "
+                "nature quietly reclaiming the campus from the ground up."
+            ),
+            visual=(
+                "Massive gnarled roots spread across ancient cobblestones in the foreground, "
+                "cracking and lifting the stone — beautiful and unstoppable. "
+                "Moss and lichen on the north-facing root surfaces. "
+                "Trunk rises powerfully from frame bottom. "
+                f"{WHERE['courtyard']}"
+            ),
+            characters="No people. The tree owns this ground.",
+            lighting_key="early_morning",
+            tone="Peaceful, timeless, quietly powerful — patience made visible.",
         ),
     },
     {
         "id": "1F",
         "label": "Transition — Campus Full, Students Blind",
         "display_name": "Tree_S01_1F_Oblivious",
-        "who": "Students (background, anonymous).",
-        "where": "Central courtyard",
-        "when": "Mid-morning",
-        "prompt": (
-            "The world fills with people — and no one sees it. "
-            "Beauty ignored: the film's central irony established in one frame. "
-            "Wide shot of the full courtyard. The magnificent ancient oak tree stands glorious at center. "
-            f"{_COURTYARD} "
-            f"{_STUDENTS} "
-            "Streams of students flow past on every cobblestone pathway — "
-            "every single one head bowed, face lit by smartphone screen glow. "
-            "Tree sharp and magnificent in the background; students softer, generic, interchangeable. "
-            "The tree and the students exist in the same frame but in different worlds. "
-            f"{_MID_MORNING} "
-            "Melancholy and ironic — overwhelming beauty, complete blindness. "
-            f"{_STYLE}"
+        "who": "students",
+        "where": "courtyard",
+        "when": "mid_morning",
+        "prompt": build_prompt(
+            narrative=(
+                "The world fills with people — and no one sees it. "
+                "Beauty ignored: the film's central irony established in one frame."
+            ),
+            visual=(
+                f"{WHERE['courtyard']} "
+                "Streams of students flow past on every cobblestone pathway — "
+                "every single one head bowed, face lit by smartphone screen glow. "
+                "Tree sharp and magnificent in the background; students softer, generic, interchangeable."
+            ),
+            characters=f"{WHO['students']} The tree and the students exist in the same frame but different worlds.",
+            lighting_key="mid_morning",
+            tone="Melancholy and ironic — overwhelming beauty, complete blindness.",
         ),
     },
 ]
