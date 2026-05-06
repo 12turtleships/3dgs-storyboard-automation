@@ -4,8 +4,6 @@ import requests
 from typing import Dict, Optional
 from dotenv import load_dotenv
 
-from story_bible import WHERE, WHEN, WHO, STYLE_SUFFIX
-
 load_dotenv()
 
 API_KEY = os.environ.get("WLT_API_KEY", "YOUR_API_KEY_HERE")
@@ -29,26 +27,34 @@ HEADERS = {
 # ---------------------------------------------------------------------------
 
 MASTER_PROMPT = (
-    # NARRATIVE
+    # WHO: none — establishing the world only
+    # WHERE: all five campus locations
+    # WHEN: summer midday
+    # WHAT: spatial anchor for all 19 scenes
+    # WHY: single source of truth for spatial and visual consistency
+    # HOW: overhead god's-eye, storyboard illustration
     "Aerial establishing shot of an entire university campus in full summer — "
     "the complete world of the film revealed in one frame. "
-    # VISUAL
     "At the absolute center: a single colossal ancient oak tree in a large open stone courtyard, "
     "its massive trunk and vast lush deep emerald-green canopy towering above everything, "
     "unmistakably the heart and soul of this campus. "
-    f"{WHERE['courtyard']} "
-    # SPATIAL COMPLETENESS — all five locations visible
-    "Radiating outward: wide cobblestone pathways connecting to surrounding buildings. "
-    f"{WHERE['pathways']} "
-    "To one side: an open green recreational field, summer grass lush and sun-drenched. "
-    "Academic buildings with large ground-floor windows hinting at classrooms inside. "
-    # LIGHTING
-    f"{WHEN['afternoon']} "
-    # TONE
+    "Central university courtyard: large open stone square, ancient cobblestones in grey and tan "
+    "worn smooth by decades of foot traffic, five pathways radiating outward, "
+    "surrounding warm stone Gothic and modernist university buildings, ivy-covered walls, tall arched windows. "
+    "Tree roots crack and lift the cobblestones — nature reclaiming human space. "
+    "Radiating outward: wide cobblestone pathways lined with ivy-covered stone walls, "
+    "arched windows, ornamental lampposts. "
+    "To one side: an open green recreational field, lush summer lawn, scattered benches, sports markings. "
+    "Academic buildings with large ground-floor classroom windows visible. "
+    "Midday to early afternoon, high overhead sun, intense direct summer light, "
+    "tree canopy glowing rich green, deepest shade beneath the trunk. "
     "The campus is breathtaking, alive, and full of beauty that no one is noticing. "
     "No people visible — a world waiting to be seen. "
-    # STYLE
-    f"{STYLE_SUFFIX}"
+    "Storyboard illustration style, not photorealistic, no live actors. "
+    "Semi-painterly digital art with clean linework and highly detailed natural elements. "
+    "Rich summer color palette: deep greens, warm stone, golden light. "
+    "Cinematic composition, dramatic depth, visible brushwork, warm paper grain. "
+    "Animated pre-visualization quality. Clear storytelling in a single frame."
 )
 
 
