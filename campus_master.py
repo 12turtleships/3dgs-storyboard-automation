@@ -4,6 +4,8 @@ import requests
 from typing import Dict, Optional
 from dotenv import load_dotenv
 
+from story_bible import WHERE, WHEN, WHO, STYLE_SUFFIX
+
 load_dotenv()
 
 API_KEY = os.environ.get("WLT_API_KEY", "YOUR_API_KEY_HERE")
@@ -14,60 +16,60 @@ HEADERS = {
 }
 
 # ---------------------------------------------------------------------------
-# MASTER CAMPUS WORLD
+# MASTER CAMPUS WORLD — Run this first before any scene script.
 #
-# This is the single spatial source of truth for the entire film "TREE".
-# Every scene — courtyard, pathways, classroom, playground — must be
-# spatially consistent with this world.
+# WHO:  No characters — establishing the world only.
+# WHERE: All five campus locations present in one unified world.
+# WHEN:  Bright summer midday — neutral light suitable as a spatial anchor.
+# WHAT:  A university campus centered on a monolithic ancient oak tree.
+# WHY:   Single spatial source of truth; all 19 scenes reference this world.
+# HOW:   Overhead god's-eye view; storyboard illustration style.
 #
-# Generation strategy:
-#   1. Generate this master world first.
-#   2. Save the world_id and pano_url from the output.
-#   3. All scene scripts reference this world's panorama as image input
-#      to anchor spatial and visual consistency across all 19 scenes.
-#
-# Campus layout (all locations present in this world):
-#   - Central courtyard: massive ancient oak tree, cobblestone ground
-#   - Radial pathways: connecting courtyard to buildings and campus exit
-#   - Academic buildings: Gothic + modernist mix, ivy-covered stone
-#   - Computer classroom: visible through ground-floor windows
-#   - Open green field / playground: to one side of the courtyard
-#   - Campus entrance: pathway leading off-campus
-#   - Sky: bright summer blue, full sun
+# After running: copy MASTER_WORLD_ID and MASTER_PANO_URL into .env
 # ---------------------------------------------------------------------------
 
-MASTER_WORLD = {
-    "display_name": "Tree_MASTER_Campus",
-    "prompt": (
-        "Aerial wide establishing shot of a grand, sprawling university campus in full summer. "
-        "At the heart of the campus stands a single colossal ancient oak tree in the center of a large "
-        "open stone courtyard — its massive trunk, enormous spreading canopy, and lush deep green leaves "
-        "make it the undeniable focal point of the entire campus. "
-        "Radiating outward from the courtyard: wide cobblestone pathways connecting to surrounding "
-        "university buildings in warm stone Gothic and modernist architecture, ivy climbing the walls, "
-        "tall arched windows. To one side of the campus, an open green recreational field with grass. "
-        "Academic buildings with ground-floor classroom windows visible. "
-        "The campus is beautiful, alive, sun-drenched — a place of learning surrounded by nature. "
-        "Bright summer daylight, lush green everywhere, no people visible. "
-        "70mm film look, epic scale, hyper-realistic, cinematic, god's-eye perspective."
-    ),
-}
+MASTER_PROMPT = (
+    # NARRATIVE
+    "Aerial establishing shot of an entire university campus in full summer — "
+    "the complete world of the film revealed in one frame. "
+    # VISUAL
+    "At the absolute center: a single colossal ancient oak tree in a large open stone courtyard, "
+    "its massive trunk and vast lush deep emerald-green canopy towering above everything, "
+    "unmistakably the heart and soul of this campus. "
+    f"{WHERE['courtyard']} "
+    # SPATIAL COMPLETENESS — all five locations visible
+    "Radiating outward: wide cobblestone pathways connecting to surrounding buildings. "
+    f"{WHERE['pathways']} "
+    "To one side: an open green recreational field, summer grass lush and sun-drenched. "
+    "Academic buildings with large ground-floor windows hinting at classrooms inside. "
+    # LIGHTING
+    f"{WHEN['afternoon']} "
+    # TONE
+    "The campus is breathtaking, alive, and full of beauty that no one is noticing. "
+    "No people visible — a world waiting to be seen. "
+    # STYLE
+    f"{STYLE_SUFFIX}"
+)
 
 
 def create_master_world() -> Optional[str]:
     print("\nTREE — Generating Master Campus World")
     print("=" * 60)
-    print("This world is the spatial anchor for all 19 scenes.")
+    print("WHO:   No characters — world only")
+    print("WHERE: Full campus — all 5 locations")
+    print("WHEN:  Summer midday")
+    print("WHAT:  Spatial anchor for all 19 scenes")
+    print("WHY:   Consistency source of truth")
+    print("HOW:   Overhead establishing, storyboard illustration")
     print("=" * 60)
-    print(f"\nModel: marble-1.1-plus")
     print("Initiating generation...\n")
 
     payload = {
-        "display_name": MASTER_WORLD["display_name"],
+        "display_name": "Tree_MASTER_Campus",
         "model": "marble-1.1-plus",
         "world_prompt": {
             "type": "text",
-            "text_prompt": MASTER_WORLD["prompt"],
+            "text_prompt": MASTER_PROMPT,
         },
     }
 
@@ -134,7 +136,7 @@ def print_master_assets(world: Dict) -> None:
     print(f"  Splat 100k:       {spz_urls.get('100k')}")
     print(f"  Caption:          {(assets.get('caption') or '')[:160]}")
     print()
-    print("  Next step: set MASTER_WORLD_ID and MASTER_PANO_URL in .env")
+    print("  Add these to your .env file:")
     print(f"  MASTER_WORLD_ID={world_id}")
     print(f"  MASTER_PANO_URL={pano_url}")
     print("=" * 60)
