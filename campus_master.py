@@ -149,6 +149,10 @@ if __name__ == "__main__":
         operation_id = create_master_world()
         if operation_id:
             snapshot = poll_for_completion(operation_id)
+            # id may be absent in snapshot — extract from world_marble_url as fallback
             world_id = snapshot.get("id")
+            if not world_id:
+                url = snapshot.get("world_marble_url", "")
+                world_id = url.rstrip("/").split("/")[-1] if url else None
             world = get_full_world(world_id) if world_id else snapshot
             print_master_assets(world)
