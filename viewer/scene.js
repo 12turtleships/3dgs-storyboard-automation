@@ -174,15 +174,14 @@ async function loadWorld() {
           document.getElementById('shot-label').textContent =
             `World: centre(${centre.x.toFixed(1)},${centre.y.toFixed(1)},${centre.z.toFixed(1)})  size(${size.x.toFixed(1)},${size.y.toFixed(1)},${size.z.toFixed(1)})`;
 
-          // Panorama camera was near bbox top (max Y ≈ +1).
-          // Place eye just below the top so we're inside the scene looking out.
-          const eyeY = bbox.max.y - size.y * 0.03;
+          // Y=-30 showed ground, Y=-1 showed sky → eye level is between.
+          // Try 25% down from top as first estimate.
+          const eyeY = bbox.max.y - size.y * 0.25;
           camera.position.set(centre.x, eyeY, centre.z);
-          controls.target.set(centre.x, eyeY, centre.z - maxDim * 0.3);
+          // Look 30% of world depth forward (was only 5 units — far too short)
+          const lookDist = size.z * 0.3;
+          controls.target.set(centre.x, eyeY, centre.z - lookDist);
           controls.update();
-
-          // Re-trigger shot 0 now that camera is in the right place
-          goToShot(currentShot);
 
           setTimeout(() => {
             loading.style.opacity = '0';
@@ -387,7 +386,7 @@ function shotToLookTarget(shot) {
 
   // Build look target relative to camera's current eye position
   const eye = camera.position;
-  const dist = 5;
+  const dist = 30;
   return new THREE.Vector3(eye.x + dx * dist, eye.y + dy * dist, eye.z + dz * dist);
 }
 
@@ -423,6 +422,19 @@ window.addEventListener('keydown', (e) => {
     goToShot((currentShot + 1) % SHOTS.length);
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
     goToShot((currentShot - 1 + SHOTS.length) % SHOTS.length);
+  // [ and ] nudge camera Y to find the right eye level
+  if (e.key === '[') {
+    camera.position.y -= 2;
+    controls.target.y -= 2;
+    controls.update();
+    document.getElementById('shot-label').textContent = `Eye Y: ${camera.position.y.toFixed(1)}`;
+  }
+  if (e.key === ']') {
+    camera.position.y += 2;
+    controls.target.y += 2;
+    controls.update();
+    document.getElementById('shot-label').textContent = `Eye Y: ${camera.position.y.toFixed(1)}`;
+  }
 });
 
 // ---------------------------------------------------------------------------
