@@ -174,10 +174,15 @@ async function loadWorld() {
           document.getElementById('shot-label').textContent =
             `World: centre(${centre.x.toFixed(1)},${centre.y.toFixed(1)},${centre.z.toFixed(1)})  size(${size.x.toFixed(1)},${size.y.toFixed(1)},${size.z.toFixed(1)})`;
 
-          const eyeHeight = centre.y + size.y * 0.1;
-          camera.position.set(centre.x, eyeHeight, centre.z);
-          controls.target.set(centre.x, eyeHeight, centre.z - maxDim * 0.3);
+          // Panorama camera was near bbox top (max Y ≈ +1).
+          // Place eye just below the top so we're inside the scene looking out.
+          const eyeY = bbox.max.y - size.y * 0.03;
+          camera.position.set(centre.x, eyeY, centre.z);
+          controls.target.set(centre.x, eyeY, centre.z - maxDim * 0.3);
           controls.update();
+
+          // Re-trigger shot 0 now that camera is in the right place
+          goToShot(currentShot);
 
           setTimeout(() => {
             loading.style.opacity = '0';
