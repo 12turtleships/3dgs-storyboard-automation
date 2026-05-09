@@ -122,8 +122,12 @@ const loadSub = document.querySelector('#loading .sub');
 let splat;
 
 async function loadWorld() {
+  const timeout = setTimeout(() => {
+    showError('Timed out after 45 s.<br>The 27 MB world file may be unreachable from your network.<br>Try a hard-refresh (Ctrl+Shift+R / Cmd+Shift+R) or check your connection.');
+  }, 45000);
+
   try {
-    loadSub.textContent = 'Connecting…';
+    loadSub.textContent = 'Connecting to CDN…';
     const response = await fetch(SPZ_URL);
     if (!response.ok) throw new Error(`HTTP ${response.status} from CDN`);
 
@@ -185,7 +189,9 @@ async function loadWorld() {
     splat.position.set(0, 0, 0);
     scene.add(splat);
 
+    clearTimeout(timeout);
   } catch (err) {
+    clearTimeout(timeout);
     showError(`Failed to load world:<br>${err.message}`);
   }
 }
