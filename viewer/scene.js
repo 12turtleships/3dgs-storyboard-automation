@@ -113,63 +113,84 @@ const spark = new SparkRenderer({ renderer });
 scene.add(spark);
 
 // ---------------------------------------------------------------------------
-// Load the .spz world
+// Load the .spz world — manual fetch for visible progress + error handling
 // ---------------------------------------------------------------------------
 const loadBar = document.getElementById('load-bar');
 const loading = document.getElementById('loading');
+const loadSub = document.querySelector('#loading .sub');
 
-// Fake progress bar while splat loads
-let progress = 0;
-const fakeProgress = setInterval(() => {
-  progress = Math.min(progress + Math.random() * 3, 90);
-  loadBar.style.width = progress + '%';
-}, 80);
+let splat;
 
-const splat = new SplatMesh({
-  url: SPZ_URL,
-  onProgress: (e) => {
-    if (e.total) {
-      const pct = Math.round(e.loaded / e.total * 90);
+async function loadWorld() {
+  try {
+    loadSub.textContent = 'Connecting…';
+    const response = await fetch(SPZ_URL);
+    if (!response.ok) throw new Error(`HTTP ${response.status} from CDN`);
+
+    const total = parseInt(response.headers.get('content-length') || '0');
+    const reader = response.body.getReader();
+    const chunks = [];
+    let received = 0;
+
+    loadSub.textContent = 'Downloading world…';
+    while (true) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      received += value.length;
+      const pct = total ? Math.round(received / total * 85) : Math.min(85, Math.round(received / 300000));
       loadBar.style.width = pct + '%';
+      loadSub.textContent = `Downloading… ${(received / 1e6).toFixed(1)} MB`;
     }
-  },
-  onLoad: (mesh) => {
-    try {
-      clearInterval(fakeProgress);
-      loadBar.style.width = '100%';
 
-      // Measure where the world actually lives and auto-centre the camera
-      const bbox = mesh.getBoundingBox();
-      const centre = new THREE.Vector3();
-      bbox.getCenter(centre);
-      const size = new THREE.Vector3();
-      bbox.getSize(size);
-      const maxDim = Math.max(size.x, size.y, size.z);
+    loadSub.textContent = 'Initialising 3D scene…';
+    loadBar.style.width = '90%';
 
-      console.log('SPZ bbox min:', bbox.min);
-      console.log('SPZ bbox max:', bbox.max);
-      console.log('SPZ centre:', centre, '  size:', size);
+    const buffer = new Uint8Array(received);
+    let pos = 0;
+    for (const chunk of chunks) { buffer.set(chunk, pos); pos += chunk.length; }
 
-      document.getElementById('shot-label').textContent =
-        `World: centre(${centre.x.toFixed(1)},${centre.y.toFixed(1)},${centre.z.toFixed(1)})  size(${size.x.toFixed(1)},${size.y.toFixed(1)},${size.z.toFixed(1)})`;
+    splat = new SplatMesh({
+      fileBytes: buffer.buffer,
+      onLoad: (mesh) => {
+        try {
+          loadBar.style.width = '100%';
 
-      const eyeHeight = centre.y + size.y * 0.1;
-      camera.position.set(centre.x, eyeHeight, centre.z);
-      controls.target.set(centre.x, eyeHeight, centre.z - maxDim * 0.3);
-      controls.update();
+          const bbox = mesh.getBoundingBox();
+          const centre = new THREE.Vector3();
+          bbox.getCenter(centre);
+          const size = new THREE.Vector3();
+          bbox.getSize(size);
+          const maxDim = Math.max(size.x, size.y, size.z);
 
-      setTimeout(() => {
-        loading.style.opacity = '0';
-        loading.style.transition = 'opacity 0.5s';
-        setTimeout(() => loading.style.display = 'none', 500);
-      }, 300);
-    } catch (err) {
-      showError(`onLoad error: ${err.message}`);
-    }
-  },
-});
-splat.position.set(0, 0, 0);
-scene.add(splat);
+          console.log('SPZ centre:', centre, 'size:', size);
+          document.getElementById('shot-label').textContent =
+            `World: centre(${centre.x.toFixed(1)},${centre.y.toFixed(1)},${centre.z.toFixed(1)})  size(${size.x.toFixed(1)},${size.y.toFixed(1)},${size.z.toFixed(1)})`;
+
+          const eyeHeight = centre.y + size.y * 0.1;
+          camera.position.set(centre.x, eyeHeight, centre.z);
+          controls.target.set(centre.x, eyeHeight, centre.z - maxDim * 0.3);
+          controls.update();
+
+          setTimeout(() => {
+            loading.style.opacity = '0';
+            loading.style.transition = 'opacity 0.5s';
+            setTimeout(() => loading.style.display = 'none', 500);
+          }, 300);
+        } catch (err) {
+          showError(`Scene init error: ${err.message}`);
+        }
+      },
+    });
+    splat.position.set(0, 0, 0);
+    scene.add(splat);
+
+  } catch (err) {
+    showError(`Failed to load world:<br>${err.message}`);
+  }
+}
+
+loadWorld();
 
 // ---------------------------------------------------------------------------
 // Ambient + directional light (summer midday)
