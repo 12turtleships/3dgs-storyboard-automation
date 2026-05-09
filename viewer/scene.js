@@ -5,10 +5,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Immediate sync update — proves JS bundle executed
-{
-  const s = document.querySelector('#loading .sub');
-  if (s) s.textContent = 'JS loaded — initialising…';
-}
+document.getElementById('load-status').textContent = 'v8 — JS running';
 
 // Show any unhandled error visibly on the loading screen
 function showError(msg) {
@@ -123,7 +120,7 @@ scene.add(spark);
 // ---------------------------------------------------------------------------
 const loadBar = document.getElementById('load-bar');
 const loading = document.getElementById('loading');
-const loadSub = document.querySelector('#loading .sub');
+const loadSub = document.getElementById('load-status');
 
 let splat;
 
