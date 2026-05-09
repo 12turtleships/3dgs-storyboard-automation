@@ -5,7 +5,7 @@ import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
 // Immediate sync update — proves JS bundle executed
-document.getElementById('load-status').textContent = 'v8 — JS running';
+document.getElementById('load-status').textContent = 'v9 — JS running';
 
 // Show any unhandled error visibly on the loading screen
 function showError(msg) {
@@ -26,48 +26,69 @@ window.addEventListener('unhandledrejection', e => showError(`Promise rejected: 
 const SPZ_URL = 'https://cdn.marble.worldlabs.ai/5eb43da0-7bca-474f-bdea-2eb7f53d63e8/a9341a07-b8eb-4140-aa4e-e7e727dbe9d1_ceramic_500k.spz';
 
 // ---------------------------------------------------------------------------
-// Scene 01 shots — camera positions matching render_storyboard.py SHOTS
-// yaw/pitch in degrees, fov in degrees, WHO/WHERE/WHEN from story_plot.py
+// Camera calibration
+// Observed: Y=-30 → ground visible, Y=-1 → sky visible.
+// ground  = bbox.max.y - size.y * 0.40  (≈ -30 for this world)
+// eyeLevel = ground + 1.7               (human eye height, ≈ -28.3)
+// Exposed as module-level var so animateCamera can use it per shot.
+// ---------------------------------------------------------------------------
+let eyeLevel = -28; // sensible default before world loads; overwritten in onLoad
+
+// ---------------------------------------------------------------------------
+// Scene 01 shots — WHO / WHERE / WHEN from story_plot.py
+//
+// yaw:     horizontal look direction in degrees (0 = forward / toward -Z)
+// pitch:   vertical tilt in degrees (+90 = straight up, -90 = straight down)
+// fov:     horizontal field of view in degrees
+// yOffset: camera Y = eyeLevel + yOffset
+//          +ve → higher than eye level (overhead shots)
+//          -ve → lower than eye level  (ground / worm's-eye shots)
 // ---------------------------------------------------------------------------
 const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
-    who: 'None', where: 'East campus, full establishing view', when: 'Early morning',
-    yaw: 90, pitch: 0, fov: 100,
+    who: 'None', where: 'Full campus, overhead', when: 'Early morning',
+    yaw: 0, pitch: -65, fov: 100,
+    yOffset: 20,   // well above campus — god's-eye establishing shot
     characters: [],
   },
   {
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
     who: 'The Tree', where: 'Central courtyard, ground level', when: 'Early morning',
     yaw: 0, pitch: 0, fov: 85,
+    yOffset: 0,    // standing at eye level, looking straight ahead
     characters: [],
   },
   {
     id: '1C', label: "Worm's Eye — The Monolith Reveal",
     who: 'The Tree', where: 'Under the tree', when: 'Early morning',
-    yaw: 0, pitch: 25, fov: 75,
+    yaw: 0, pitch: 75, fov: 70,
+    yOffset: -1.5, // at/near ground, looking near-vertically upward
     characters: [],
   },
   {
     id: '1D', label: 'Canopy Upshot — Natural Cathedral',
     who: 'The Tree', where: 'Under the tree', when: 'Mid-morning',
-    yaw: 0, pitch: 45, fov: 80,
+    yaw: 0, pitch: 65, fov: 80,
+    yOffset: 0,    // eye level, steep upward look through canopy
     characters: [],
   },
   {
     id: '1E', label: 'Root Level — Nature Reclaiming Stone',
     who: 'The Tree', where: 'Courtyard, ground level', when: 'Early morning',
-    yaw: 0, pitch: -15, fov: 75,
+    yaw: 0, pitch: -20, fov: 75,
+    yOffset: -1.5, // at ground, slight downward look at roots
     characters: [],
   },
   {
     id: '1F', label: 'Transition — Campus Full, Students Blind',
-    who: 'Students (background)', where: 'Sports field, south campus', when: 'Mid-morning',
-    yaw: 180, pitch: 0, fov: 95,
+    who: 'Students (background)', where: 'Central courtyard', when: 'Mid-morning',
+    yaw: 0, pitch: 5, fov: 100,
+    yOffset: 0,    // eye level, very slight upward tilt, wide view
     characters: [
-      { role: 'student', x: -2, z: -8, rotY: 0.3 },
-      { role: 'student', x:  1, z: -6, rotY: -0.2 },
-      { role: 'student', x:  3, z: -10, rotY: 0.5 },
+      { role: 'student', x: -2, z: -8,  rotY: 0.3  },
+      { role: 'student', x:  1, z: -6,  rotY: -0.2 },
+      { role: 'student', x:  3, z: -10, rotY: 0.5  },
     ],
   },
 ];
@@ -99,14 +120,14 @@ container.appendChild(renderer.domElement);
 
 const scene = new THREE.Scene();
 const camera = new THREE.PerspectiveCamera(85, window.innerWidth / window.innerHeight, 0.01, 1000);
-camera.position.set(0, 1.6, 0);
+camera.position.set(0, eyeLevel, 0);
 
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.rotateSpeed = 0.4;
 controls.zoomSpeed = 0.6;
-controls.target.set(0, 1.6, -5);
+controls.target.set(0, eyeLevel, -5);
 controls.update();
 
 // ---------------------------------------------------------------------------
@@ -168,19 +189,25 @@ async function loadWorld() {
           bbox.getCenter(centre);
           const size = new THREE.Vector3();
           bbox.getSize(size);
-          const maxDim = Math.max(size.x, size.y, size.z);
 
-          console.log('SPZ centre:', centre, 'size:', size);
+          console.log('SPZ bbox — centre:', centre, 'size:', size);
+
+          // Calibrated from observations:
+          //   Y = -30 → ground visible (camera at ground level)
+          //   Y = -1  → sky visible   (camera above scene)
+          // ground ≈ bbox.max.y - size.y * 0.40  →  1.05 - 31.1 = -30.0 ✓
+          const groundY  = bbox.max.y - size.y * 0.40;
+          eyeLevel = groundY + 1.7;   // human eye height above ground
+
+          console.log(`groundY=${groundY.toFixed(2)}  eyeLevel=${eyeLevel.toFixed(2)}`);
           document.getElementById('shot-label').textContent =
-            `World: centre(${centre.x.toFixed(1)},${centre.y.toFixed(1)},${centre.z.toFixed(1)})  size(${size.x.toFixed(1)},${size.y.toFixed(1)},${size.z.toFixed(1)})`;
+            `bbox centre(${centre.x.toFixed(1)}, ${centre.y.toFixed(1)}, ${centre.z.toFixed(1)})  ` +
+            `size(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})  ` +
+            `eyeLevel=${eyeLevel.toFixed(1)}`;
 
-          // Y=-30 showed ground, Y=-1 showed sky → eye level is between.
-          // Try 25% down from top as first estimate.
-          const eyeY = bbox.max.y - size.y * 0.25;
-          camera.position.set(centre.x, eyeY, centre.z);
-          // Look 30% of world depth forward (was only 5 units — far too short)
-          const lookDist = size.z * 0.3;
-          controls.target.set(centre.x, eyeY, centre.z - lookDist);
+          // Place camera at eye level, slightly in front of world centre
+          camera.position.set(centre.x, eyeLevel, centre.z + size.z * 0.3);
+          controls.target.set(centre.x, eyeLevel, centre.z);
           controls.update();
 
           setTimeout(() => {
@@ -339,10 +366,8 @@ function goToShot(index) {
     const clone = model.clone(true);
     clone.position.set(c.x, 0, c.z);
     clone.rotation.y = c.rotY || 0;
-    // FBX models already scaled to 0.01 at load time; GLB/placeholders stay at 1.0
     if (!clone.scale.x || clone.scale.x === 1.0) clone.scale.setScalar(1.0);
     scene.add(clone);
-    // Re-attach animation mixer on the clone
     if (model.userData.mixer) {
       const srcAction = model.userData.mixer._actions[0];
       if (srcAction) {
@@ -355,10 +380,8 @@ function goToShot(index) {
     characterMeshes[`char_${i}`] = clone;
   });
 
-  // Animate camera to shot position
   animateCamera(shot);
 
-  // Update UI
   document.getElementById('shot-label').textContent = `Shot ${shot.id} — ${shot.label}`;
   updateCharInfo(shot);
   buildNav();
@@ -374,40 +397,46 @@ function updateCharInfo(shot) {
 }
 
 // ---------------------------------------------------------------------------
-// Camera animation — convert yaw/pitch/fov to THREE.js look direction
+// Camera animation
+//
+// Each shot defines yaw/pitch/fov (look direction) and yOffset (Y position
+// relative to eyeLevel). animateCamera moves camera.position.y to
+// eyeLevel + shot.yOffset and computes lookTarget from the destination
+// position — not the current position — so the view is correct mid-lerp.
 // ---------------------------------------------------------------------------
-function shotToLookTarget(shot) {
-  const yawRad = THREE.MathUtils.degToRad(shot.yaw);
-  const pitchRad = THREE.MathUtils.degToRad(shot.pitch);
-
-  const dx = Math.sin(yawRad) * Math.cos(pitchRad);
-  const dy = Math.sin(pitchRad);
-  const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
-
-  // Build look target relative to camera's current eye position
-  const eye = camera.position;
-  const dist = 30;
-  return new THREE.Vector3(eye.x + dx * dist, eye.y + dy * dist, eye.z + dz * dist);
-}
-
 function animateCamera(shot) {
   camera.fov = shot.fov;
   camera.updateProjectionMatrix();
 
-  const target = shotToLookTarget(shot);
-  const startPos = camera.position.clone();
-  const startTarget = controls.target.clone();
-  // Use the current camera position as the eye-point so it stays inside the world
-  const origin = camera.position.clone();
+  // Destination camera position — only Y changes, X/Z stay at current
+  const destY = eyeLevel + (shot.yOffset || 0);
+  const destPos = new THREE.Vector3(camera.position.x, destY, camera.position.z);
 
+  // Compute look direction from shot yaw/pitch
+  const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
+  const pitchRad = THREE.MathUtils.degToRad(shot.pitch);
+  const dx =  Math.sin(yawRad) * Math.cos(pitchRad);
+  const dy =  Math.sin(pitchRad);
+  const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
+
+  // Look target computed from destination (not current) so it's stable
+  const dist = 30;
+  const lookTarget = new THREE.Vector3(
+    destPos.x + dx * dist,
+    destPos.y + dy * dist,
+    destPos.z + dz * dist
+  );
+
+  const startPos    = camera.position.clone();
+  const startTarget = controls.target.clone();
   let t = 0;
   const duration = 60; // frames
 
   function step() {
     t++;
-    const alpha = 1 - Math.pow(1 - t / duration, 3); // ease out cubic
-    camera.position.lerpVectors(startPos, origin, alpha);
-    controls.target.lerpVectors(startTarget, target, alpha);
+    const alpha = 1 - Math.pow(1 - t / duration, 3); // ease-out cubic
+    camera.position.lerpVectors(startPos, destPos, alpha);
+    controls.target.lerpVectors(startTarget, lookTarget, alpha);
     controls.update();
     if (t < duration) requestAnimationFrame(step);
   }
@@ -416,24 +445,27 @@ function animateCamera(shot) {
 
 // ---------------------------------------------------------------------------
 // Keyboard navigation
+// Arrow keys: previous / next shot
+// [ / ]     : nudge camera Y by 1 unit to fine-tune eye level
 // ---------------------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
   if (e.key === 'ArrowRight' || e.key === 'ArrowDown')
     goToShot((currentShot + 1) % SHOTS.length);
   if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
     goToShot((currentShot - 1 + SHOTS.length) % SHOTS.length);
-  // [ and ] nudge camera Y to find the right eye level
   if (e.key === '[') {
-    camera.position.y -= 2;
-    controls.target.y -= 2;
+    eyeLevel -= 1;
+    camera.position.y -= 1;
+    controls.target.y -= 1;
     controls.update();
-    document.getElementById('shot-label').textContent = `Eye Y: ${camera.position.y.toFixed(1)}`;
+    document.getElementById('shot-label').textContent = `eyeLevel nudged → ${eyeLevel.toFixed(1)} (use ] to go up)`;
   }
   if (e.key === ']') {
-    camera.position.y += 2;
-    controls.target.y += 2;
+    eyeLevel += 1;
+    camera.position.y += 1;
+    controls.target.y += 1;
     controls.update();
-    document.getElementById('shot-label').textContent = `Eye Y: ${camera.position.y.toFixed(1)}`;
+    document.getElementById('shot-label').textContent = `eyeLevel nudged → ${eyeLevel.toFixed(1)} (use [ to go down)`;
   }
 });
 

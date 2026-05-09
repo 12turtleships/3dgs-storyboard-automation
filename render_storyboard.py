@@ -45,21 +45,21 @@ SHOTS = [
         "id": "1A",
         "label": "Full Campus — The Entire World Revealed",
         "who": "None",
-        "where": "East campus, full establishing view",
+        "where": "Full campus overhead",
         "when": "Early morning",
-        "yaw": 90,
-        "pitch": 0,     # ground-level east: Gothic hall + clock tower + open sports field
+        "yaw": 0,
+        "pitch": -75,   # steep downward — god's eye / overhead
         "fov": 100,
     },
     {
         "id": "1B",
         "label": "Courtyard Wide — Tree as Undeniable Center",
-        "who": "The Tree",
+        "who": "None",
         "where": "Central courtyard, ground level",
         "when": "Early morning",
         "yaw": 0,
-        "pitch": 0,     # eye level: tree trunk, cobblestone base, colonnade behind
-        "fov": 85,
+        "pitch": 0,     # eye level, facing forward
+        "fov": 90,
     },
     {
         "id": "1C",
@@ -68,8 +68,8 @@ SHOTS = [
         "where": "Under the tree",
         "when": "Early morning",
         "yaw": 0,
-        "pitch": 25,    # looking up: spreading branches against sky, building edge
-        "fov": 75,
+        "pitch": 80,    # near-vertical upward — worm's eye
+        "fov": 70,
     },
     {
         "id": "1D",
@@ -78,7 +78,7 @@ SHOTS = [
         "where": "Under the tree",
         "when": "Mid-morning",
         "yaw": 0,
-        "pitch": 45,    # steeply up through dense canopy, sky beyond
+        "pitch": 60,    # steeply upward through canopy
         "fov": 80,
     },
     {
@@ -88,18 +88,18 @@ SHOTS = [
         "where": "Courtyard, ground level",
         "when": "Early morning",
         "yaw": 0,
-        "pitch": -15,   # slight down: cobblestones, tree base, roots
+        "pitch": -25,   # slight downward — looking at roots
         "fov": 75,
     },
     {
         "id": "1F",
         "label": "Transition — Campus Full, Students Blind",
         "who": "Students (background)",
-        "where": "Sports field, south campus",
+        "where": "Central courtyard",
         "when": "Mid-morning",
-        "yaw": 180,
-        "pitch": 0,     # eye level south: real sports field, brick + glass buildings
-        "fov": 95,
+        "yaw": 180,     # facing opposite direction — transition feel
+        "pitch": 5,     # very slightly upward
+        "fov": 100,
     },
 ]
 
@@ -136,7 +136,7 @@ def crop_rectilinear(
     pano_arr = np.array(pano, dtype=np.float32)
 
     yaw   = math.radians(yaw_deg)
-    pitch = math.radians(-pitch_deg)  # negate: panorama Y-axis is inverted vs. convention
+    pitch = math.radians(pitch_deg)
     fov   = math.radians(fov_deg)
 
     # Build grid of output pixel coordinates
