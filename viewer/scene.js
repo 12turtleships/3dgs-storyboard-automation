@@ -4,6 +4,12 @@ import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
 
+// Immediate sync update — proves JS bundle executed
+{
+  const s = document.querySelector('#loading .sub');
+  if (s) s.textContent = 'JS loaded — initialising…';
+}
+
 // Show any unhandled error visibly on the loading screen
 function showError(msg) {
   const el = document.getElementById('loading');
