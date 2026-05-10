@@ -220,7 +220,6 @@ async function loadWorld() {
           const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
           // Use distance to visual scene centre (ground level) so orbit target lands
           // on the campus, not on the underground bbox centroid.
-          const groundY = eyeLevel - 1.7;
           const visualCentre = new THREE.Vector3(centre.x, groundY, centre.z);
           const tDist = Math.max(30, camera.position.distanceTo(visualCentre));
           controls.target.set(
