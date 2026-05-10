@@ -49,7 +49,7 @@ const SHOTS = [
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, overhead', when: 'Early morning',
     yaw: 0, pitch: -65, fov: 100,
-    yOffset: 20,   // well above campus — god's-eye establishing shot
+    yOffset: 65,   // must clear bbox.max.y — eyeLevel≈-28 + 65 ≈ +37, above scene top
     characters: [],
   },
   {
@@ -205,10 +205,12 @@ async function loadWorld() {
             `size(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})  ` +
             `eyeLevel=${eyeLevel.toFixed(1)}`;
 
-          // Place camera at eye level, slightly in front of world centre
-          camera.position.set(centre.x, eyeLevel, centre.z + size.z * 0.3);
-          controls.target.set(centre.x, eyeLevel, centre.z);
+          // Anchor camera at world centre, then re-apply the current shot
+          // with the newly calibrated eyeLevel (initial goToShot ran before load)
+          camera.position.set(centre.x, eyeLevel, centre.z);
+          controls.target.set(centre.x, eyeLevel, centre.z - 5);
           controls.update();
+          animateCamera(SHOTS[currentShot]);
 
           setTimeout(() => {
             loading.style.opacity = '0';
