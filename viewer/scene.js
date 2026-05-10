@@ -49,9 +49,9 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
-    yaw: 0, pitch: -5, fov: 85,
-    yOffset: 2,   // Y≈-26 — just above eye level / human height
-    zSnap: 44,    // Z = centre.z + 44 ≈ +10, inside scene by 12 units (avoids boundary artifacts)
+    yaw: 0, pitch: -42, fov: 85,
+    yOffset: 28,  // Y≈-0.3 — just below tree canopy, looking down through it at campus
+    zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre — matches user's found view
     characters: [],
   },
   {
