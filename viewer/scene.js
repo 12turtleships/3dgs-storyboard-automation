@@ -129,8 +129,6 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.rotateSpeed = 0.4;
 controls.zoomSpeed = 0.6;
-controls.minPolarAngle = 0.05;        // prevent flipping over the top
-controls.maxPolarAngle = Math.PI - 0.05; // prevent flipping under the bottom
 controls.target.set(0, eyeLevel, -5);
 controls.update();
 
