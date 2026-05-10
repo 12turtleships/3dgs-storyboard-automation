@@ -49,7 +49,7 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
-    yaw: 0, pitch: -45, fov: 85,
+    yaw: 0, pitch: -59, fov: 85,
     yOffset: 80,  // Y≈+52 — above tree (bbox.max.y≈+1)
     zSnap: 54,    // Z = centre.z + 54 ≈ +20, front edge of scene — look across campus
     characters: [],
@@ -220,10 +220,13 @@ async function loadWorld() {
           const dx =  Math.sin(yawRad) * Math.cos(pitchRad);
           const dy =  Math.sin(pitchRad);
           const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
+          // Use actual distance to scene centre so orbit target lands on the scene,
+          // not in empty space 30 units from an aerial camera.
+          const tDist = Math.max(30, camera.position.distanceTo(centre));
           controls.target.set(
-            camera.position.x + dx * 30,
-            camera.position.y + dy * 30,
-            camera.position.z + dz * 30
+            camera.position.x + dx * tDist,
+            camera.position.y + dy * tDist,
+            camera.position.z + dz * tDist
           );
           controls.update();
 
