@@ -200,17 +200,31 @@ async function loadWorld() {
           eyeLevel = groundY + 1.7;   // human eye height above ground
 
           console.log(`groundY=${groundY.toFixed(2)}  eyeLevel=${eyeLevel.toFixed(2)}`);
-          document.getElementById('shot-label').textContent =
-            `bbox centre(${centre.x.toFixed(1)}, ${centre.y.toFixed(1)}, ${centre.z.toFixed(1)})  ` +
-            `size(${size.x.toFixed(1)}, ${size.y.toFixed(1)}, ${size.z.toFixed(1)})  ` +
-            `eyeLevel=${eyeLevel.toFixed(1)}`;
 
-          // Anchor camera at world centre, then re-apply the current shot
-          // with the newly calibrated eyeLevel (initial goToShot ran before load)
-          camera.position.set(centre.x, eyeLevel, centre.z);
-          controls.target.set(centre.x, eyeLevel, centre.z - 5);
+          // Snap camera directly to the initial shot — no lerp animation.
+          // (goToShot is NOT called at init; eyeLevel must be calibrated first.)
+          const shot = SHOTS[currentShot];
+          const destY = eyeLevel + (shot.yOffset || 0);
+
+          camera.fov = shot.fov;
+          camera.updateProjectionMatrix();
+          camera.position.set(centre.x, destY, centre.z);
+
+          const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
+          const pitchRad = THREE.MathUtils.degToRad(shot.pitch);
+          const dx =  Math.sin(yawRad) * Math.cos(pitchRad);
+          const dy =  Math.sin(pitchRad);
+          const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
+          controls.target.set(
+            centre.x + dx * 30,
+            destY    + dy * 30,
+            centre.z + dz * 30
+          );
           controls.update();
-          animateCamera(SHOTS[currentShot]);
+
+          document.getElementById('shot-label').textContent = `Shot ${shot.id} — ${shot.label}`;
+          updateCharInfo(shot);
+          buildNav();
 
           setTimeout(() => {
             loading.style.opacity = '0';
@@ -497,5 +511,4 @@ function animate() {
 // Init
 // ---------------------------------------------------------------------------
 buildNav();
-goToShot(0);
 animate();
