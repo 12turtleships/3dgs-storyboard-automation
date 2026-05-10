@@ -26,7 +26,7 @@ window.addEventListener('unhandledrejection', e => showError(`Promise rejected: 
 // Per-shot SPZ: add `spzUrl: '...'` to any SHOTS entry to load a different
 // world for that shot (e.g. a higher-quality regeneration of a specific scene).
 // ---------------------------------------------------------------------------
-const DEFAULT_SPZ_URL = 'https://cdn.marble.worldlabs.ai/5eb43da0-7bca-474f-bdea-2eb7f53d63e8/a9341a07-b8eb-4140-aa4e-e7e727dbe9d1_ceramic_500k.spz';
+const DEFAULT_SPZ_URL = 'https://cdn.marble.worldlabs.ai/fcf05383-91d7-4880-8186-98899075f4a1/2da89a0f-f85d-4077-8a7a-0540631cb250_ceramic_500k.spz';
 let currentSpzUrl = null; // tracks which SPZ is currently loaded
 
 // ---------------------------------------------------------------------------
@@ -65,9 +65,8 @@ const SHOTS = [
   {
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
     who: 'The Tree', where: 'Central courtyard, ground level', when: 'Early morning',
-    yaw: 172, pitch: -20, fov: 85,
-    yOffset: 25,   // Y≈-3.3 — elevated, looking outward from inside courtyard
-    zSnap: 19,     // Z = worldCentre.z + 19 ≈ -15 — inside courtyard between tree and front edge
+    yaw: 0, pitch: 0, fov: 85,
+    yOffset: 0,    // eye level, looking straight ahead — calibrate after testing new world
     characters: [],
   },
   {
@@ -95,8 +94,7 @@ const SHOTS = [
     id: '1F', label: 'Transition — Campus Full, Students Blind',
     who: 'Students (background)', where: 'Central courtyard', when: 'Mid-morning',
     yaw: 0, pitch: 5, fov: 100,
-    yOffset: 0,    // eye level, very slight upward tilt
-    zSnap: 20,     // Z ≈ -14 — in front of tree, wide view shows full campus
+    yOffset: 0,    // eye level, very slight upward tilt — calibrate after testing new world
     characters: [
       { role: 'student', x: -2, z: -8,  rotY: 0.3  },
       { role: 'student', x:  1, z: -6,  rotY: -0.2 },
