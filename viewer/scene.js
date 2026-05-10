@@ -32,7 +32,8 @@ const SPZ_URL = 'https://cdn.marble.worldlabs.ai/5eb43da0-7bca-474f-bdea-2eb7f53
 // eyeLevel = ground + 1.7               (human eye height, ≈ -28.3)
 // Exposed as module-level var so animateCamera can use it per shot.
 // ---------------------------------------------------------------------------
-let eyeLevel = -28; // sensible default before world loads; overwritten in onLoad
+let eyeLevel = -28;   // overwritten in onLoad after bbox calibration
+let worldCentre = new THREE.Vector3(); // set in onLoad; used by animateCamera for zSnap
 
 // ---------------------------------------------------------------------------
 // Scene 01 shots — WHO / WHERE / WHEN from story_plot.py
@@ -47,9 +48,10 @@ let eyeLevel = -28; // sensible default before world loads; overwritten in onLoa
 const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
-    who: 'None', where: 'Full campus, overhead', when: 'Early morning',
-    yaw: 0, pitch: -80, fov: 45,
-    yOffset: 120,  // eyeLevel≈-28 + 120 ≈ +92; narrow FOV zooms campus to fill frame
+    who: 'None', where: 'Full campus, wide lateral', when: 'Early morning',
+    yaw: 0, pitch: -8, fov: 90,
+    yOffset: 5,   // near eye level — wide lateral from outside campus
+    zSnap: 90,    // camera Z = centre.z + 90 (outside scene boundary)
     characters: [],
   },
   {
@@ -198,6 +200,7 @@ async function loadWorld() {
           // ground ≈ bbox.max.y - size.y * 0.40  →  1.05 - 31.1 = -30.0 ✓
           const groundY  = bbox.max.y - size.y * 0.40;
           eyeLevel = groundY + 1.7;   // human eye height above ground
+          worldCentre.copy(centre);
 
           console.log(`groundY=${groundY.toFixed(2)}  eyeLevel=${eyeLevel.toFixed(2)}`);
 
@@ -208,7 +211,7 @@ async function loadWorld() {
 
           camera.fov = shot.fov;
           camera.updateProjectionMatrix();
-          camera.position.set(centre.x, destY, centre.z);
+          camera.position.set(centre.x, destY, centre.z + (shot.zSnap || 0));
 
           const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
           const pitchRad = THREE.MathUtils.degToRad(shot.pitch);
@@ -424,9 +427,10 @@ function animateCamera(shot) {
   camera.fov = shot.fov;
   camera.updateProjectionMatrix();
 
-  // Destination camera position — only Y changes, X/Z stay at current
+  // Destination camera position — Y from eyeLevel+yOffset; Z snapped to worldCentre+zSnap if set
   const destY = eyeLevel + (shot.yOffset || 0);
-  const destPos = new THREE.Vector3(camera.position.x, destY, camera.position.z);
+  const destZ = shot.zSnap != null ? worldCentre.z + shot.zSnap : camera.position.z;
+  const destPos = new THREE.Vector3(camera.position.x, destY, destZ);
 
   // Compute look direction from shot yaw/pitch
   const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
