@@ -133,8 +133,14 @@ camera.position.set(0, eyeLevel, 0);
 const controls = new OrbitControls(camera, renderer.domElement);
 controls.enableDamping = true;
 controls.dampingFactor = 0.08;
-controls.rotateSpeed = 0.4;
-controls.zoomSpeed = 0.6;
+controls.rotateSpeed = 0.6;
+controls.zoomSpeed = 0.8;
+controls.panSpeed = 1.0;
+controls.screenSpacePanning = true;   // pan tracks screen, not world-up
+controls.minPolarAngle = 0;           // allow full vertical rotation
+controls.maxPolarAngle = Math.PI;
+controls.minDistance = 0.1;           // no minimum zoom distance
+controls.maxDistance = Infinity;      // no maximum zoom distance
 controls.target.set(0, eyeLevel, -5);
 controls.update();
 
