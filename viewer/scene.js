@@ -41,9 +41,12 @@ let worldCentre = new THREE.Vector3(); // set in onLoad; used by animateCamera f
 // yaw:     horizontal look direction in degrees (0 = forward / toward -Z)
 // pitch:   vertical tilt in degrees (+90 = straight up, -90 = straight down)
 // fov:     horizontal field of view in degrees
-// yOffset: camera Y = eyeLevel + yOffset
-//          +ve → higher than eye level (overhead shots)
-//          -ve → lower than eye level  (ground / worm's-eye shots)
+// yOffset: camera Y = eyeLevel + yOffset  (THREE.js Y-up)
+//          For normal shots  (+ve = higher, -ve = lower/ground)
+//          For flipUp shots  visual altitude is INVERTED: +ve = visually lower,
+//                            -ve (smaller yOffset) = visually higher aerial view
+// zSnap:   camera Z = worldCentre.z + zSnap  (omit → worldCentre.z = tree centre)
+//          +ve → in front of scene centre (toward viewer), -ve → behind
 // ---------------------------------------------------------------------------
 const SHOTS = [
   {
@@ -59,7 +62,8 @@ const SHOTS = [
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
     who: 'The Tree', where: 'Central courtyard, ground level', when: 'Early morning',
     yaw: 0, pitch: 0, fov: 85,
-    yOffset: 0,    // standing at eye level, looking straight ahead
+    yOffset: 0,    // eye level
+    zSnap: 25,     // Z = worldCentre.z + 25 ≈ -9 — 25 units in front of tree, facing it
     characters: [],
   },
   {
@@ -87,7 +91,8 @@ const SHOTS = [
     id: '1F', label: 'Transition — Campus Full, Students Blind',
     who: 'Students (background)', where: 'Central courtyard', when: 'Mid-morning',
     yaw: 0, pitch: 5, fov: 100,
-    yOffset: 0,    // eye level, very slight upward tilt, wide view
+    yOffset: 0,    // eye level, very slight upward tilt
+    zSnap: 20,     // Z ≈ -14 — in front of tree, wide view shows full campus
     characters: [
       { role: 'student', x: -2, z: -8,  rotY: 0.3  },
       { role: 'student', x:  1, z: -6,  rotY: -0.2 },
