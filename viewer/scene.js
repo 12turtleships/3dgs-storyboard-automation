@@ -49,10 +49,10 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
-    yaw: 0, pitch: -48, fov: 85,
-    yOffset: 31,  // Y≈+2.7 — just above tree canopy for cleaner elevated view
-    zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre — matches user's found view
-    flipUp: true, // camera.up must be (0,-1,0) at this elevation or image renders inverted
+    yaw: 0, pitch: -42, fov: 85,
+    yOffset: 28,  // Y≈-0.3 — just below tree canopy (going higher enters tree splats)
+    zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre
+    flipUp: true, // camera.up=(0,-1,0): scene visual-up is -Y in THREE.js world
     characters: [],
   },
   {
@@ -436,7 +436,7 @@ function animateCamera(shot) {
 
   // Destination camera position — Y from eyeLevel+yOffset; Z snapped to worldCentre+zSnap if set
   const destY = eyeLevel + (shot.yOffset || 0);
-  const destZ = shot.zSnap != null ? worldCentre.z + shot.zSnap : camera.position.z;
+  const destZ = shot.zSnap != null ? worldCentre.z + shot.zSnap : worldCentre.z;
   const destPos = new THREE.Vector3(worldCentre.x, destY, destZ);
 
   // Compute look direction from shot yaw/pitch
