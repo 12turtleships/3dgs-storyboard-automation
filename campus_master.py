@@ -32,63 +32,54 @@ HEADERS = {
 # ---------------------------------------------------------------------------
 
 MASTER_PROMPT = (
-    # --- VIEWPOINT ---
-    "Photorealistic aerial view of a sprawling university campus, camera elevated "
-    "approximately 150 feet above ground, tilted slightly downward to show the full campus. "
-    "The campus stretches 800+ meters — a genuine large research university, not a small quad. "
+    # --- VIEWPOINT: ground level inside the quad ---
+    "Photorealistic 360-degree panorama captured from ground level, standing inside "
+    "a grand university quadrangle, camera at human eye height (1.7 metres). "
+    "The camera stands at the edge of a large green lawn looking across toward the centre of the quad. "
 
-    # --- CAMPUS STYLE: modern international, NOT British collegiate ---
-    "Campus architectural style: modern international research university — "
-    "mix of historic stone buildings and contemporary glass-and-concrete structures. "
-    "NOT an Oxford-style enclosed collegiate quad. NOT formal English gardens or hedgerow parterres. "
-    "Wide open spaces between buildings. Generous lawns. Natural informal landscaping. "
-    "Think large modern university: MIT, ETH Zurich, or a large American state university. "
+    # --- THE TREE: dominant, centred ---
+    "Dead centre of the quadrangle: one enormous ancient plane tree (Platanus x acerifolia), "
+    "25-30 metres tall, massive spreading canopy 20 metres wide, "
+    "mottled grey-green bark, dense fresh green summer foliage. "
+    "The tree trunk is thick and imposing. The canopy fills the upper centre of the view. "
+    "Visible roots emerge slightly at the base. "
 
-    # --- THE TREE ---
-    "Dead center of campus: one ancient English oak, 80-100 feet tall, "
-    "enormous spreading umbrella canopy 60+ feet wide, deeply furrowed grey bark, "
-    "dense emerald-green summer foliage, massive gnarled roots lifting cobblestones at the base. "
-    "The tree is visible from every corner of campus as the unmistakable landmark. "
-    "It is surrounded by a large open cobblestone square, not a planter box, not a formal garden. "
+    # --- BUILDINGS: Victorian Gothic on both sides ---
+    "Flanking the quad on the right side (east): a grand Victorian Gothic university building, "
+    "5 storeys of honey-coloured sandstone, rows of tall pointed-arch windows on every floor, "
+    "ornate carved stone hood moulds above each window, corbelled cornice, steep slate roof with "
+    "decorative stone chimneys. The building facade runs the full width of the right side of the quad. "
+    "Style: University of Glasgow, University of Edinburgh main quad, or Trinity College Dublin. "
 
-    # --- CENTRAL QUAD: open, spacious ---
-    "Around the tree: a large open cobblestone plaza, at least 100 meters across, "
-    "with simple stone benches and no hedgerows, no formal gardens, no decorative parterres. "
-    "Four wide straight paths (15m wide, tree-lined) radiate outward from the plaza. "
+    "On the left side (west): a complementary stone building, slightly more modern, "
+    "with large glass panels integrated into a stone frame — historic meets contemporary. "
 
-    # --- BUILDINGS: distinct, separated, varied styles ---
-    "North: a large Gothic stone academic hall, 5 stories, pointed arched windows, "
-    "ivy-covered, slate roof — the historic heart of campus. "
-    "East: a modern glass-and-steel science complex, multiple stories, open plazas. "
-    "West: contemporary arts and humanities buildings in warm brick and concrete. "
-    "South: a large administration building with a visible clock tower. "
-    "Northwest: a student services building with outdoor seating terraces. "
-    "All buildings are large, architecturally complete, and visually distinct from each other. "
-    "Each building stands 30-50 meters back from the nearest path. "
+    "Behind the viewer (south): the quad is open, with a wide stone archway entrance. "
 
-    # --- RECREATIONAL FIELD: natural grass sports field, NOT a formal garden ---
-    "South of the academic core: a large open grass sports field, "
-    "at least 150 meters long and 80 meters wide, natural green grass, "
-    "simple white painted line markings for football/soccer, "
-    "a small open-sided timber pavilion shelter on one side, "
-    "a few simple wooden benches along the edge. "
-    "NO hedgerows. NO formal lawn striping. NO decorative gardens. NO flagpoles. "
-    "Just natural open turf with minimal markings. "
-    "Clear direct sightline from the field back to the great oak. "
+    "Opposite (north, behind the tree): a matching Gothic stone hall, "
+    "slightly recessed, with a visible clock tower. "
 
-    # --- GROUNDS: natural, informal ---
-    "Between buildings: wide open grass lawns, informal planting, mature trees. "
-    "Bicycle racks. Casual seating. No formal English garden elements. "
-    "Campus perimeter: low stone wall with open iron gate entries. "
-    "Streets and urban context visible beyond the perimeter. "
+    # --- GROUND PLANE ---
+    "The quad floor: a large rectangle of well-maintained deep green lawn, "
+    "approximately 80 metres x 60 metres. "
+    "A simple stone-edged path runs around the perimeter of the lawn. "
+    "No hedgerows, no flowerbeds, no benches cluttering the open space. "
+
+    # --- SKY: clean, open, complete ---
+    "Sky: bright overcast summer sky, soft diffuse light, no harsh shadows. "
+    "The sky is FULLY RENDERED — clean pale blue-white overcast, no artifacts, "
+    "no blurring, no floating debris. The upper portion of the panorama shows "
+    "clear sky above the tree canopy and building rooflines. "
 
     # --- LIGHTING ---
-    f"{WHEN['afternoon']} "
-    "Near-vertical summer sun, sharp shadows, intense green vegetation, "
-    "warm stone and concrete in direct light. "
+    "Soft summer overcast light. Even illumination across the whole scene. "
+    "No extreme contrast. Stone buildings glow warmly. Lawn is vivid green. "
+    "Tree canopy is lit from above, leaves translucent at the edges. "
 
-    # --- ATMOSPHERE ---
-    "No people. Enormous scale. Real institution. Every surface has material weight and age."
+    # --- QUALITY ---
+    "Photorealistic. Architectural photography quality. "
+    "Every stone, window frame, and leaf is crisp and well-defined. "
+    "No people. No cars. No scaffolding."
 )
 
 
@@ -141,7 +132,7 @@ def create_master_world() -> Optional[str]:
     print("Initiating generation...\n")
 
     payload = {
-        "display_name": "Tree_MASTER_Campus_v4",
+        "display_name": "Tree_MASTER_Campus_v5",
         "model": "marble-1.1-plus",
         "world_prompt": {
             "type": "text",
