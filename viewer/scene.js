@@ -509,6 +509,14 @@ function animate() {
   const delta = clock.getDelta();
   mixers.forEach(m => m.update(delta));
   controls.update();
+
+  // Live camera readout — press P to print coords to console and HUD
+  const p = camera.position;
+  const t = controls.target;
+  document.getElementById('cam-debug').textContent =
+    `cam(${p.x.toFixed(1)}, ${p.y.toFixed(1)}, ${p.z.toFixed(1)})  ` +
+    `target(${t.x.toFixed(1)}, ${t.y.toFixed(1)}, ${t.z.toFixed(1)})`;
+
   spark.render(scene, camera);
 }
 
