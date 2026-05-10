@@ -49,9 +49,9 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, wide lateral', when: 'Early morning',
-    yaw: 0, pitch: -8, fov: 90,
-    yOffset: 5,   // near eye level — wide lateral from outside campus
-    zSnap: 90,    // camera Z = centre.z + 90 (outside scene boundary)
+    yaw: 0, pitch: -8, fov: 100,
+    yOffset: 3,   // near eye level
+    zSnap: 45,    // camera inside scene near front edge (scene +Z boundary ≈ +22 from centre)
     characters: [],
   },
   {
