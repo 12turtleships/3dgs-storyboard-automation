@@ -48,10 +48,9 @@ let worldCentre = new THREE.Vector3(); // set in onLoad; used by animateCamera f
 const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
-    who: 'None', where: 'Full campus, wide lateral', when: 'Early morning',
-    yaw: 0, pitch: -8, fov: 100,
-    yOffset: 3,   // near eye level
-    zSnap: 45,    // camera inside scene near front edge (scene +Z boundary ≈ +22 from centre)
+    who: 'None', where: 'Full campus, elevated wide', when: 'Early morning',
+    yaw: 0, pitch: -25, fov: 100,
+    yOffset: 10,  // ~10 units above eye level, looking down to reveal campus spread
     characters: [],
   },
   {
@@ -129,6 +128,8 @@ controls.enableDamping = true;
 controls.dampingFactor = 0.08;
 controls.rotateSpeed = 0.4;
 controls.zoomSpeed = 0.6;
+controls.minPolarAngle = 0.05;        // prevent flipping over the top
+controls.maxPolarAngle = Math.PI - 0.05; // prevent flipping under the bottom
 controls.target.set(0, eyeLevel, -5);
 controls.update();
 
@@ -219,9 +220,9 @@ async function loadWorld() {
           const dy =  Math.sin(pitchRad);
           const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
           controls.target.set(
-            centre.x + dx * 30,
-            destY    + dy * 30,
-            centre.z + dz * 30
+            camera.position.x + dx * 30,
+            camera.position.y + dy * 30,
+            camera.position.z + dz * 30
           );
           controls.update();
 
