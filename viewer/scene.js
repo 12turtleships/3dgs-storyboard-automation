@@ -48,8 +48,8 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, overhead', when: 'Early morning',
-    yaw: 0, pitch: -75, fov: 90,
-    yOffset: 120,  // eyeLevel≈-28 + 120 ≈ +92, well above scene to reveal full campus
+    yaw: 0, pitch: -80, fov: 45,
+    yOffset: 120,  // eyeLevel≈-28 + 120 ≈ +92; narrow FOV zooms campus to fill frame
     characters: [],
   },
   {
@@ -208,7 +208,7 @@ async function loadWorld() {
 
           camera.fov = shot.fov;
           camera.updateProjectionMatrix();
-          camera.position.set(centre.x, destY, centre.z + size.z * 0.15);
+          camera.position.set(centre.x, destY, centre.z);
 
           const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
           const pitchRad = THREE.MathUtils.degToRad(shot.pitch);
