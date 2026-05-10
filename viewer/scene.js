@@ -50,7 +50,7 @@ const SHOTS = [
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
     yaw: 0, pitch: -42, fov: 85,
-    yOffset: 28,  // Y≈-0.3 — just below tree canopy (going higher enters tree splats)
+    yOffset: 24,  // Y≈-4.3 — visually higher (with flipUp, more -Y = higher visual altitude)
     zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre
     flipUp: true, // camera.up=(0,-1,0): scene visual-up is -Y in THREE.js world
     characters: [],
