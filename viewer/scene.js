@@ -49,9 +49,10 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
-    yaw: 0, pitch: -59, fov: 85,
-    yOffset: 80,  // Y≈+52 — above tree (bbox.max.y≈+1)
-    zSnap: 54,    // Z = centre.z + 54 ≈ +20, front edge of scene — look across campus
+    yaw: 0, pitch: -48, fov: 85,
+    yOffset: 31,  // Y≈+2.7 — just above tree canopy for cleaner elevated view
+    zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre — matches user's found view
+    flipUp: true, // camera.up must be (0,-1,0) at this elevation or image renders inverted
     characters: [],
   },
   {
@@ -211,6 +212,7 @@ async function loadWorld() {
 
           camera.fov = shot.fov;
           camera.updateProjectionMatrix();
+          camera.up.set(0, shot.flipUp ? -1 : 1, 0);
           camera.position.set(centre.x, destY, centre.z + (shot.zSnap || 0));
 
           const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
@@ -218,9 +220,10 @@ async function loadWorld() {
           const dx =  Math.sin(yawRad) * Math.cos(pitchRad);
           const dy =  Math.sin(pitchRad);
           const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
-          // Use actual distance to scene centre so orbit target lands on the scene,
-          // not in empty space 30 units from an aerial camera.
-          const tDist = Math.max(30, camera.position.distanceTo(centre));
+          // Use distance to visual scene centre (ground level) so orbit target lands
+          // on the campus, not on the underground bbox centroid.
+          const visualCentre = new THREE.Vector3(centre.x, groundY, centre.z);
+          const tDist = Math.max(30, camera.position.distanceTo(visualCentre));
           controls.target.set(
             camera.position.x + dx * tDist,
             camera.position.y + dy * tDist,
@@ -429,11 +432,12 @@ function updateCharInfo(shot) {
 function animateCamera(shot) {
   camera.fov = shot.fov;
   camera.updateProjectionMatrix();
+  camera.up.set(0, shot.flipUp ? -1 : 1, 0);
 
   // Destination camera position — Y from eyeLevel+yOffset; Z snapped to worldCentre+zSnap if set
   const destY = eyeLevel + (shot.yOffset || 0);
   const destZ = shot.zSnap != null ? worldCentre.z + shot.zSnap : camera.position.z;
-  const destPos = new THREE.Vector3(camera.position.x, destY, destZ);
+  const destPos = new THREE.Vector3(worldCentre.x, destY, destZ);
 
   // Compute look direction from shot yaw/pitch
   const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
@@ -442,8 +446,10 @@ function animateCamera(shot) {
   const dy =  Math.sin(pitchRad);
   const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
 
-  // Look target computed from destination (not current) so it's stable
-  const dist = 30;
+  // Use distance to visual ground-level centre so target lands on the campus
+  const groundY = eyeLevel - 1.7;
+  const visualCentre = new THREE.Vector3(worldCentre.x, groundY, worldCentre.z);
+  const dist = Math.max(30, destPos.distanceTo(visualCentre));
   const lookTarget = new THREE.Vector3(
     destPos.x + dx * dist,
     destPos.y + dy * dist,
