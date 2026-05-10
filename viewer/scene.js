@@ -49,8 +49,8 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus, aerial approach', when: 'Early morning',
-    yaw: 0, pitch: -59, fov: 85,
-    yOffset: 80,  // Y≈+52 — above tree (bbox.max.y≈+1)
+    yaw: 0, pitch: -15, fov: 85,
+    yOffset: 15,  // Y≈-13 — ~17 units above ground, inside scene frustum
     zSnap: 54,    // Z = centre.z + 54 ≈ +20, front edge of scene — look across campus
     characters: [],
   },
@@ -218,9 +218,11 @@ async function loadWorld() {
           const dx =  Math.sin(yawRad) * Math.cos(pitchRad);
           const dy =  Math.sin(pitchRad);
           const dz = -Math.cos(yawRad) * Math.cos(pitchRad);
-          // Use actual distance to scene centre so orbit target lands on the scene,
-          // not in empty space 30 units from an aerial camera.
-          const tDist = Math.max(30, camera.position.distanceTo(centre));
+          // Use distance to visual scene centre (ground level) so orbit target lands
+          // on the campus, not on the underground bbox centroid.
+          const groundY = eyeLevel - 1.7;
+          const visualCentre = new THREE.Vector3(centre.x, groundY, centre.z);
+          const tDist = Math.max(30, camera.position.distanceTo(visualCentre));
           controls.target.set(
             camera.position.x + dx * tDist,
             camera.position.y + dy * tDist,
