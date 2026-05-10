@@ -48,9 +48,9 @@ let worldCentre = new THREE.Vector3(); // set in onLoad; used by animateCamera f
 const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
-    who: 'None', where: 'Full campus, elevated wide', when: 'Early morning',
-    yaw: 0, pitch: -25, fov: 100,
-    yOffset: 10,  // ~10 units above eye level, looking down to reveal campus spread
+    who: 'None', where: 'Full campus, overhead', when: 'Early morning',
+    yaw: 0, pitch: -65, fov: 70,
+    yOffset: 80,  // camera at Y≈+52, above tree top (bbox.max.y≈+1) — any lower is inside tree
     characters: [],
   },
   {
