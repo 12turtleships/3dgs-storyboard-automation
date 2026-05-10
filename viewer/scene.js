@@ -52,6 +52,7 @@ const SHOTS = [
     yaw: 0, pitch: -42, fov: 85,
     yOffset: 28,  // Y≈-0.3 — just below tree canopy, looking down through it at campus
     zSnap: 34,    // Z = centre.z + 34 ≈ 0, near scene centre — matches user's found view
+    flipUp: true, // camera.up must be (0,-1,0) at this elevation or image renders inverted
     characters: [],
   },
   {
@@ -211,6 +212,7 @@ async function loadWorld() {
 
           camera.fov = shot.fov;
           camera.updateProjectionMatrix();
+          camera.up.set(0, shot.flipUp ? -1 : 1, 0);
           camera.position.set(centre.x, destY, centre.z + (shot.zSnap || 0));
 
           const yawRad   = THREE.MathUtils.degToRad(shot.yaw);
