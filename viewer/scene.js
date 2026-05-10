@@ -61,9 +61,9 @@ const SHOTS = [
   {
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
     who: 'The Tree', where: 'Central courtyard, ground level', when: 'Early morning',
-    yaw: 0, pitch: 0, fov: 85,
-    yOffset: 0,    // eye level
-    zSnap: 25,     // Z = worldCentre.z + 25 ≈ -9 — 25 units in front of tree, facing it
+    yaw: 172, pitch: -20, fov: 85,
+    yOffset: 25,   // Y≈-3.3 — elevated, looking outward from inside courtyard
+    zSnap: 19,     // Z = worldCentre.z + 19 ≈ -15 — inside courtyard between tree and front edge
     characters: [],
   },
   {
