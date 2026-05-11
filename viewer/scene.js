@@ -35,46 +35,44 @@ const SHOTS = [
   {
     id: '1A', label: 'Full Campus — The Entire World Revealed',
     who: 'None', where: 'Full campus view', when: 'Early morning',
-    yaw: 0, pitch: -10, fov: 90,
+    yaw: 35, pitch: -5, fov: 90,
     characters: [],
   },
   {
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
     who: 'Zara', where: 'Central courtyard', when: 'Early morning',
-    yaw: 0, pitch: 0, fov: 75,
-    // Zara stands slightly right of centre, 4 units away, looking up at the tree.
+    yaw: 35, pitch: 0, fov: 75,
     characters: [
-      { role: 'zara', x: 1.2, z: -4, rotY: 0.0 },
+      { role: 'zara', x: 0.5, z: -8, rotY: 0.0 },
     ],
   },
   {
     id: '1C', label: "Worm's Eye — The Monolith Reveal",
     who: 'The Tree', where: 'Under the tree', when: 'Early morning',
-    yaw: 0, pitch: 60, fov: 70,
+    yaw: 35, pitch: 60, fov: 70,
     characters: [],
   },
   {
     id: '1D', label: 'Canopy Upshot — Natural Cathedral',
     who: 'The Tree', where: 'Under the tree', when: 'Mid-morning',
-    yaw: 0, pitch: 82, fov: 85,
+    yaw: 35, pitch: 82, fov: 85,
     characters: [],
   },
   {
     id: '1E', label: 'Root Level — Nature Reclaiming Stone',
     who: 'The Tree', where: 'Courtyard, ground level', when: 'Early morning',
-    yaw: 0, pitch: -50, fov: 70,
+    yaw: 35, pitch: -40, fov: 70,
     characters: [],
   },
   {
     id: '1F', label: 'Transition — Campus Full, Students Blind',
     who: 'Zara + Students', where: 'Central courtyard', when: 'Mid-morning',
-    yaw: 0, pitch: -5, fov: 100,
-    // Zara is the one looking UP at the tree; students look down at phones.
+    yaw: 35, pitch: -5, fov: 100,
     characters: [
-      { role: 'zara',    x:  0,  z: -5,  rotY:  0.0 },
-      { role: 'student', x: -2,  z: -8,  rotY:  0.3 },
-      { role: 'student', x:  1,  z: -6,  rotY: -0.2 },
-      { role: 'student', x:  3,  z: -10, rotY:  0.5 },
+      { role: 'zara',    x:  0,   z: -7,  rotY:  0.0 },
+      { role: 'student', x: -2.5, z: -9,  rotY:  0.3 },
+      { role: 'student', x:  1.5, z: -7,  rotY: -0.2 },
+      { role: 'student', x:  3,   z: -11, rotY:  0.5 },
     ],
   },
 ];
