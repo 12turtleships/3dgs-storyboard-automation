@@ -22,7 +22,7 @@ window.addEventListener('unhandledrejection', e => showError(`Promise rejected: 
 // Per-shot panorama: add `panoUrl: '...'` to any SHOTS entry to load a
 // different panorama for that shot (e.g. closer to the tree, or aerial).
 // ---------------------------------------------------------------------------
-const DEFAULT_PANO_URL = '__PANO_URL__'; // paste URL from campus_master.py output here
+const DEFAULT_PANO_URL = 'https://cdn.marble.worldlabs.ai/fcf05383-91d7-4880-8186-98899075f4a1/84a8ada1-29fe-482e-8f97-bbde6cda991c_panos/rgb_0.png';
 
 // ---------------------------------------------------------------------------
 // Scene 01 shots
