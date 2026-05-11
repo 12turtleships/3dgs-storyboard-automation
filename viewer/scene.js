@@ -44,7 +44,7 @@ const SHOTS = [
     who: 'Zara', where: 'Central courtyard', when: 'Early morning',
     yaw: 35, pitch: 0, fov: 75,
     characters: [
-      { role: 'zara', x: 0.5, z: -8, rotY: 0.0 },
+      { role: 'zara', x: 0, z: -20, y: -7, rotY: 0.0 },
     ],
   },
   {
@@ -70,10 +70,10 @@ const SHOTS = [
     who: 'Zara + Students', where: 'Central courtyard', when: 'Mid-morning',
     yaw: 35, pitch: -5, fov: 100,
     characters: [
-      { role: 'zara',    x:  0,   z: -7,  rotY:  0.0 },
-      { role: 'student', x: -2.5, z: -9,  rotY:  0.3 },
-      { role: 'student', x:  1.5, z: -7,  rotY: -0.2 },
-      { role: 'student', x:  3,   z: -11, rotY:  0.5 },
+      { role: 'zara',    x:  0,   z: -20, y: -7,  rotY:  0.0 },
+      { role: 'student', x: -3,   z: -25, y: -8,  rotY:  0.3 },
+      { role: 'student', x:  2,   z: -20, y: -7,  rotY: -0.2 },
+      { role: 'student', x:  4,   z: -30, y: -9,  rotY:  0.5 },
     ],
   },
 ];
@@ -427,16 +427,68 @@ function updateCharInfo(shot) {
 }
 
 // ---------------------------------------------------------------------------
+// Character nudge controls
+// Select a character with Tab, then nudge with:
+//   W/S  → move forward/back (z)
+//   A/D  → move left/right (x)
+//   Q/E  → move up/down (y)
+// Debug HUD shows the current position so you can copy values back to SHOTS.
+// ---------------------------------------------------------------------------
+let selectedChar = -1;  // index into shot.characters (-1 = none)
+
+function selectChar(idx) {
+  const shot = SHOTS[currentShot];
+  // Clear highlight on previous
+  if (selectedChar >= 0) {
+    const prev = characterMeshes[`char_${selectedChar}`];
+    if (prev) prev.traverse(o => { if (o.isMesh) o.material.emissive?.set(0x000000); });
+  }
+  selectedChar = (shot.characters.length === 0) ? -1 : idx % shot.characters.length;
+  // Highlight selected
+  if (selectedChar >= 0) {
+    const cur = characterMeshes[`char_${selectedChar}`];
+    if (cur) cur.traverse(o => { if (o.isMesh && o.material.emissive) o.material.emissive.set(0x442200); });
+  }
+}
+
+function nudgeChar(dx, dy, dz) {
+  if (selectedChar < 0) return;
+  const shot = SHOTS[currentShot];
+  const c    = shot.characters[selectedChar];
+  c.x = (c.x || 0) + dx;
+  c.y = (c.y != null ? c.y : -1.7) + dy;
+  c.z = (c.z || 0) + dz;
+  const mesh = characterMeshes[`char_${selectedChar}`];
+  if (mesh) mesh.position.set(c.x, c.y, c.z);
+}
+
+// ---------------------------------------------------------------------------
 // Keyboard shortcuts
 // ---------------------------------------------------------------------------
 window.addEventListener('keydown', (e) => {
-  if (e.key === 'ArrowRight' || e.key === 'ArrowDown')
-    goToShot((currentShot + 1) % SHOTS.length);
-  if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
-    goToShot((currentShot - 1 + SHOTS.length) % SHOTS.length);
+  // Shot navigation — only when no character selected or modifier held
+  if (!e.shiftKey && selectedChar < 0) {
+    if (e.key === 'ArrowRight' || e.key === 'ArrowDown')
+      goToShot((currentShot + 1) % SHOTS.length);
+    if (e.key === 'ArrowLeft' || e.key === 'ArrowUp')
+      goToShot((currentShot - 1 + SHOTS.length) % SHOTS.length);
+  }
   // Fine-tune pitch of current shot with [ / ]
   if (e.key === '[') { targetLat -= 2; lat = targetLat; }
   if (e.key === ']') { targetLat += 2; lat = targetLat; }
+
+  // Character selection
+  if (e.key === 'Tab') { e.preventDefault(); selectChar(selectedChar + 1); }
+  if (e.key === 'Escape') selectChar(-1);
+
+  // Character nudge (1 m steps; hold Shift for 0.25 m)
+  const step = e.shiftKey ? 0.25 : 1;
+  if (e.key === 'w' || e.key === 'W') nudgeChar(0, 0, -step);
+  if (e.key === 's' || e.key === 'S') nudgeChar(0, 0,  step);
+  if (e.key === 'a' || e.key === 'A') nudgeChar(-step, 0, 0);
+  if (e.key === 'd' || e.key === 'D') nudgeChar( step, 0, 0);
+  if (e.key === 'q' || e.key === 'Q') nudgeChar(0,  step, 0);
+  if (e.key === 'e' || e.key === 'E') nudgeChar(0, -step, 0);
 });
 
 // ---------------------------------------------------------------------------
@@ -468,8 +520,16 @@ function animate() {
 
   applyLook();
 
-  document.getElementById('cam-debug').textContent =
-    `lon(${lon.toFixed(1)}°)  lat(${lat.toFixed(1)}°)  fov(${camera.fov.toFixed(0)}°)`;
+  const shot = SHOTS[currentShot];
+  let dbg = `lon(${lon.toFixed(1)}°)  lat(${lat.toFixed(1)}°)  fov(${camera.fov.toFixed(0)}°)`;
+  if (selectedChar >= 0 && shot.characters[selectedChar]) {
+    const c = shot.characters[selectedChar];
+    dbg += `   [char ${selectedChar}] x(${(c.x||0).toFixed(2)}) y(${(c.y!=null?c.y:-1.7).toFixed(2)}) z(${(c.z||0).toFixed(2)})`;
+    dbg += '  Tab=next  WASD=x/z  QE=y  Shift=fine';
+  } else if (shot.characters.length > 0) {
+    dbg += '   Tab=select character';
+  }
+  document.getElementById('cam-debug').textContent = dbg;
 
   renderer.render(scene, camera);
 }
