@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils.js';
+import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 document.getElementById('load-status').textContent = 'v10 — panorama viewer';
 
@@ -351,7 +351,7 @@ function placeCharacters(shot) {
     let mesh;
     if (lib && lib.source) {
       // SkeletonUtils.clone properly rebinds skinned mesh bones to the new skeleton.
-      mesh = SkeletonUtils.clone(lib.source);
+      mesh = cloneSkeleton(lib.source);
       if (lib.clips.length > 0) {
         const mixer = new THREE.AnimationMixer(mesh);
         mixer.clipAction(lib.clips[0]).play();
