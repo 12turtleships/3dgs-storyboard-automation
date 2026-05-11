@@ -304,9 +304,9 @@ function tryLoad(role, path, type, onSuccess) {
 }
 
 const charPaths = {
-  zara:      { path: './characters/zara_idle.glb',            type: 'glb' },
-  student:   { path: './characters/student_texting_walk.fbx', type: 'fbx' },
-  professor: { path: './characters/professor_idle.glb',       type: 'glb' },
+  zara:      { path: '../characters/student_texting_walk.fbx', type: 'fbx' },
+  student:   { path: '../characters/student_texting_walk.fbx', type: 'fbx' },
+  professor: { path: './characters/professor_idle.glb',        type: 'glb' },
 };
 const charModels = {};
 Object.entries(charPaths).forEach(([role, { path, type }]) => {
