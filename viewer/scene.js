@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
+import { SkeletonUtils } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 document.getElementById('load-status').textContent = 'v10 — panorama viewer';
 
@@ -252,6 +253,9 @@ const gltfLoader = new GLTFLoader();
 const fbxLoader  = new FBXLoader();
 const characterMeshes = {};
 const mixers = [];
+// charLibrary stores { source: Object3D, clips: AnimationClip[] } per role.
+// source is never added to the scene — only SkeletonUtils.clone()d copies are.
+const charLibrary = {};
 
 function makeCharacterPlaceholder(role) {
   const group = new THREE.Group();
@@ -286,20 +290,21 @@ function makeCharacterPlaceholder(role) {
   return group;
 }
 
-function tryLoad(role, path, type, onSuccess) {
+function loadCharacter(role, path, type) {
   const loader = type === 'fbx' ? fbxLoader : gltfLoader;
   loader.load(path, (result) => {
-    const obj = type === 'fbx' ? result : result.scene;
-    // Mixamo FBX exports in millimetres; scale to metres (1 mm = 0.001 m).
-    if (type === 'fbx') obj.scale.setScalar(0.001);
-    const anims = type === 'fbx' ? result.animations : result.animations;
-    if (anims && anims.length > 0) {
-      const mixer = new THREE.AnimationMixer(obj);
-      mixer.clipAction(anims[0]).play();
-      mixers.push(mixer);
-    }
-    onSuccess(obj);
-  }, undefined, () => onSuccess(makeCharacterPlaceholder(role)));
+    const source = type === 'fbx' ? result : result.scene;
+    const clips  = result.animations || [];
+    // Mixamo FBX is in centimetres; FBXLoader does not auto-scale → 0.01 cm→m.
+    if (type === 'fbx') source.scale.setScalar(0.01);
+    charLibrary[role] = { source, clips };
+    // Re-place characters for the active shot now that the model is ready.
+    placeCharacters(SHOTS[currentShot]);
+  }, undefined, () => {
+    // Fall back to placeholder — mark role as failed so placeCharacters uses it.
+    charLibrary[role] = null;
+    placeCharacters(SHOTS[currentShot]);
+  });
 }
 
 // Characters loaded at runtime from GitHub CDN — keeps build under Cloudflare's 25 MB limit.
@@ -309,18 +314,53 @@ const charPaths = {
   student:   { path: `${GITHUB_RAW}/student_texting_walk.fbx`, type: 'fbx' },
   professor: { path: `${GITHUB_RAW}/professor_idle.glb`,       type: 'glb' },
 };
-const charModels = {};
+// Deduplicate: only load each unique path once; share the same library entry.
+const loaded = new Set();
 Object.entries(charPaths).forEach(([role, { path, type }]) => {
-  tryLoad(role, path, type, (obj) => { charModels[role] = obj; });
+  // Find if another role already uses the same path.
+  const sharedRole = Object.keys(charPaths).find(
+    r => r !== role && charPaths[r].path === path
+  );
+  if (sharedRole && loaded.has(path)) {
+    // Mirror the library reference once the shared role finishes loading.
+    const mirror = () => {
+      if (charLibrary[sharedRole] !== undefined) {
+        charLibrary[role] = charLibrary[sharedRole];
+      } else {
+        setTimeout(mirror, 100);
+      }
+    };
+    mirror();
+  } else {
+    loaded.add(path);
+    loadCharacter(role, path, type);
+  }
 });
 
 function placeCharacters(shot) {
-  Object.values(characterMeshes).forEach(m => scene.remove(m));
+  // Remove existing character meshes from scene.
+  Object.values(characterMeshes).forEach(m => {
+    scene.remove(m);
+    // Dispose mixer for this mesh if one was created.
+    m.userData.mixer && m.userData.mixer.stopAllAction();
+  });
   Object.keys(characterMeshes).forEach(k => delete characterMeshes[k]);
 
   shot.characters.forEach((c, i) => {
-    const model = charModels[c.role];
-    const mesh  = model ? model.clone(true) : makeCharacterPlaceholder(c.role);
+    const lib = charLibrary[c.role];
+    let mesh;
+    if (lib && lib.source) {
+      // SkeletonUtils.clone properly rebinds skinned mesh bones to the new skeleton.
+      mesh = SkeletonUtils.clone(lib.source);
+      if (lib.clips.length > 0) {
+        const mixer = new THREE.AnimationMixer(mesh);
+        mixer.clipAction(lib.clips[0]).play();
+        mixers.push(mixer);
+        mesh.userData.mixer = mixer;
+      }
+    } else {
+      mesh = makeCharacterPlaceholder(c.role);
+    }
     // Camera is at eye level (~1.7 m above ground); place feet at y = -1.7.
     mesh.position.set(c.x || 0, c.y != null ? c.y : -1.7, c.z || -5);
     mesh.rotation.y = c.rotY || 0;
