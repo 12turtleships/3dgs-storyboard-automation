@@ -1,7 +1,6 @@
 import * as THREE from 'three';
 import { GLTFLoader } from 'three/examples/jsm/loaders/GLTFLoader.js';
 import { FBXLoader } from 'three/examples/jsm/loaders/FBXLoader.js';
-import { clone as cloneSkeleton } from 'three/examples/jsm/utils/SkeletonUtils.js';
 
 document.getElementById('load-status').textContent = 'v10 — panorama viewer';
 
@@ -44,7 +43,7 @@ const SHOTS = [
     who: 'Zara', where: 'Central courtyard', when: 'Early morning',
     yaw: 35, pitch: 0, fov: 75,
     characters: [
-      { role: 'zara', x: 0, z: -20, y: -7, rotY: 0.0 },
+      { role: 'zara', x: 0, z: -20, y: -10, rotY: 0.0 },
     ],
   },
   {
@@ -70,10 +69,10 @@ const SHOTS = [
     who: 'Zara + Students', where: 'Central courtyard', when: 'Mid-morning',
     yaw: 35, pitch: -5, fov: 100,
     characters: [
-      { role: 'zara',    x:  0,   z: -20, y: -7,  rotY:  0.0 },
-      { role: 'student', x: -3,   z: -25, y: -8,  rotY:  0.3 },
-      { role: 'student', x:  2,   z: -20, y: -7,  rotY: -0.2 },
-      { role: 'student', x:  4,   z: -30, y: -9,  rotY:  0.5 },
+      { role: 'zara',    x:  0,   z: -20, y: -10, rotY:  0.0 },
+      { role: 'student', x: -3,   z: -25, y: -11, rotY:  0.3 },
+      { role: 'student', x:  2,   z: -20, y: -10, rotY: -0.2 },
+      { role: 'student', x:  4,   z: -30, y: -12, rotY:  0.5 },
     ],
   },
 ];
@@ -253,9 +252,11 @@ const gltfLoader = new GLTFLoader();
 const fbxLoader  = new FBXLoader();
 const characterMeshes = {};
 const mixers = [];
-// charLibrary stores { source: Object3D, clips: AnimationClip[] } per role.
-// source is never added to the scene — only SkeletonUtils.clone()d copies are.
-const charLibrary = {};
+
+// Pre-loaded character pool: { role → [Object3D, ...] }
+// Each entry is a fully-loaded, independently-animated Object3D ready to
+// be added to the scene. We preload as many copies as the busiest shot needs.
+const charPool = {};
 
 function makeCharacterPlaceholder(role) {
   const group = new THREE.Group();
@@ -283,28 +284,7 @@ function makeCharacterPlaceholder(role) {
     phone.position.set(0.12, 1.55, -0.22);
     group.add(phone);
   }
-  if (role === 'zara') {
-    // Head tilted back — looking up at the tree.
-    head.rotation.x = -0.5;
-  }
   return group;
-}
-
-function loadCharacter(role, path, type) {
-  const loader = type === 'fbx' ? fbxLoader : gltfLoader;
-  loader.load(path, (result) => {
-    const source = type === 'fbx' ? result : result.scene;
-    const clips  = result.animations || [];
-    // Mixamo FBX is in centimetres; FBXLoader does not auto-scale → 0.01 cm→m.
-    if (type === 'fbx') source.scale.setScalar(0.01);
-    charLibrary[role] = { source, clips };
-    // Re-place characters for the active shot now that the model is ready.
-    placeCharacters(SHOTS[currentShot]);
-  }, undefined, () => {
-    // Fall back to placeholder — mark role as failed so placeCharacters uses it.
-    charLibrary[role] = null;
-    placeCharacters(SHOTS[currentShot]);
-  });
 }
 
 // Characters loaded at runtime from GitHub CDN — keeps build under Cloudflare's 25 MB limit.
@@ -314,54 +294,67 @@ const charPaths = {
   student:   { path: `${GITHUB_RAW}/student_texting_walk.fbx`, type: 'fbx' },
   professor: { path: `${GITHUB_RAW}/professor_idle.glb`,       type: 'glb' },
 };
-// Deduplicate: only load each unique path once; share the same library entry.
-const loaded = new Set();
-Object.entries(charPaths).forEach(([role, { path, type }]) => {
-  // Find if another role already uses the same path.
-  const sharedRole = Object.keys(charPaths).find(
-    r => r !== role && charPaths[r].path === path
-  );
-  if (sharedRole && loaded.has(path)) {
-    // Mirror the library reference once the shared role finishes loading.
-    const mirror = () => {
-      if (charLibrary[sharedRole] !== undefined) {
-        charLibrary[role] = charLibrary[sharedRole];
-      } else {
-        setTimeout(mirror, 100);
-      }
-    };
-    mirror();
-  } else {
-    loaded.add(path);
-    loadCharacter(role, path, type);
+
+// Count the most instances of each role needed in any single shot.
+const maxNeeded = {};
+SHOTS.forEach(shot => {
+  const counts = {};
+  shot.characters.forEach(c => { counts[c.role] = (counts[c.role] || 0) + 1; });
+  Object.entries(counts).forEach(([role, n]) => {
+    maxNeeded[role] = Math.max(maxNeeded[role] || 0, n);
+  });
+});
+
+function loadOneInstance(role, path, type, phaseOffset) {
+  const loader = type === 'fbx' ? fbxLoader : gltfLoader;
+  loader.load(path, (result) => {
+    const obj   = type === 'fbx' ? result : result.scene;
+    const clips = result.animations || [];
+    // Mixamo FBX is in centimetres; FBXLoader does not auto-scale → 0.01 cm→m.
+    if (type === 'fbx') obj.scale.setScalar(0.01);
+
+    if (clips.length > 0) {
+      const mixer = new THREE.AnimationMixer(obj);
+      const action = mixer.clipAction(clips[0]);
+      action.play();
+      // Stagger walk cycle phase so crowd members don't move in sync.
+      mixer.setTime(phaseOffset);
+      mixers.push(mixer);
+      obj.userData.mixer = mixer;
+    }
+
+    charPool[role].push(obj);
+    placeCharacters(SHOTS[currentShot]);
+  }, undefined, () => {
+    // Loading failed — push null so the slot falls back to a placeholder.
+    charPool[role].push(null);
+    placeCharacters(SHOTS[currentShot]);
+  });
+}
+
+// Kick off pre-loads for every role that appears in any shot.
+Object.entries(maxNeeded).forEach(([role, n]) => {
+  charPool[role] = [];
+  const { path, type } = charPaths[role] || charPaths.student;
+  for (let i = 0; i < n; i++) {
+    loadOneInstance(role, path, type, i * 0.4);
   }
 });
 
 function placeCharacters(shot) {
-  // Remove existing character meshes from scene.
-  Object.values(characterMeshes).forEach(m => {
-    scene.remove(m);
-    // Dispose mixer for this mesh if one was created.
-    m.userData.mixer && m.userData.mixer.stopAllAction();
-  });
+  // Remove all current character meshes.
+  Object.values(characterMeshes).forEach(m => scene.remove(m));
   Object.keys(characterMeshes).forEach(k => delete characterMeshes[k]);
 
+  // Track how many of each role we've already assigned this shot.
+  const usedCount = {};
+
   shot.characters.forEach((c, i) => {
-    const lib = charLibrary[c.role];
-    let mesh;
-    if (lib && lib.source) {
-      // SkeletonUtils.clone properly rebinds skinned mesh bones to the new skeleton.
-      mesh = cloneSkeleton(lib.source);
-      if (lib.clips.length > 0) {
-        const mixer = new THREE.AnimationMixer(mesh);
-        mixer.clipAction(lib.clips[0]).play();
-        mixers.push(mixer);
-        mesh.userData.mixer = mixer;
-      }
-    } else {
-      mesh = makeCharacterPlaceholder(c.role);
-    }
-    // Camera is at eye level (~1.7 m above ground); place feet at y = -1.7.
+    const idx  = usedCount[c.role] = (usedCount[c.role] || 0);
+    usedCount[c.role]++;
+    const pool = charPool[c.role] || [];
+    const mesh = (pool[idx] != null) ? pool[idx] : makeCharacterPlaceholder(c.role);
+
     mesh.position.set(c.x || 0, c.y != null ? c.y : -1.7, c.z || -5);
     mesh.rotation.y = c.rotY || 0;
     scene.add(mesh);
