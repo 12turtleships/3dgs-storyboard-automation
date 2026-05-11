@@ -290,7 +290,8 @@ function tryLoad(role, path, type, onSuccess) {
   const loader = type === 'fbx' ? fbxLoader : gltfLoader;
   loader.load(path, (result) => {
     const obj = type === 'fbx' ? result : result.scene;
-    if (type === 'fbx') obj.scale.setScalar(0.01);
+    // Mixamo FBX exports in millimetres; scale to metres (1 mm = 0.001 m).
+    if (type === 'fbx') obj.scale.setScalar(0.001);
     const anims = type === 'fbx' ? result.animations : result.animations;
     if (anims && anims.length > 0) {
       const mixer = new THREE.AnimationMixer(obj);
