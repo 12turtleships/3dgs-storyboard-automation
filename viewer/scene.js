@@ -40,9 +40,12 @@ const SHOTS = [
   },
   {
     id: '1B', label: 'Courtyard Wide — Tree as Undeniable Center',
-    who: 'The Tree', where: 'Central courtyard', when: 'Early morning',
+    who: 'Zara', where: 'Central courtyard', when: 'Early morning',
     yaw: 0, pitch: 0, fov: 75,
-    characters: [],
+    // Zara stands slightly right of centre, 4 units away, looking up at the tree.
+    characters: [
+      { role: 'zara', x: 1.2, z: -4, rotY: 0.0 },
+    ],
   },
   {
     id: '1C', label: "Worm's Eye — The Monolith Reveal",
@@ -64,12 +67,14 @@ const SHOTS = [
   },
   {
     id: '1F', label: 'Transition — Campus Full, Students Blind',
-    who: 'Students (background)', where: 'Central courtyard', when: 'Mid-morning',
+    who: 'Zara + Students', where: 'Central courtyard', when: 'Mid-morning',
     yaw: 0, pitch: -5, fov: 100,
+    // Zara is the one looking UP at the tree; students look down at phones.
     characters: [
-      { role: 'student', x: -2, z: -8  },
-      { role: 'student', x:  1, z: -6  },
-      { role: 'student', x:  3, z: -10 },
+      { role: 'zara',    x:  0,  z: -5,  rotY:  0.0 },
+      { role: 'student', x: -2,  z: -8,  rotY:  0.3 },
+      { role: 'student', x:  1,  z: -6,  rotY: -0.2 },
+      { role: 'student', x:  3,  z: -10, rotY:  0.5 },
     ],
   },
 ];
@@ -78,8 +83,8 @@ const SHOTS = [
 // Character placeholder colours
 // ---------------------------------------------------------------------------
 const CHAR_COLORS = {
-  zara:      0x8b7355,
-  student:   0x4a6fa5,
+  zara:      0xe8956d,  // warm terracotta — Zara stands out
+  student:   0x4a6fa5,  // muted blue — anonymous crowd
   professor: 0x6b5b45,
 };
 
@@ -276,6 +281,10 @@ function makeCharacterPlaceholder(role) {
     phone.position.set(0.12, 1.55, -0.22);
     group.add(phone);
   }
+  if (role === 'zara') {
+    // Head tilted back — looking up at the tree.
+    head.rotation.x = -0.5;
+  }
   return group;
 }
 
@@ -295,9 +304,9 @@ function tryLoad(role, path, type, onSuccess) {
 }
 
 const charPaths = {
-  zara:      { path: '../characters/zara_idle.glb',            type: 'glb' },
-  student:   { path: '../characters/student_texting_walk.fbx', type: 'fbx' },
-  professor: { path: '../characters/professor_idle.glb',       type: 'glb' },
+  zara:      { path: './characters/zara_idle.glb',            type: 'glb' },
+  student:   { path: './characters/student_texting_walk.fbx', type: 'fbx' },
+  professor: { path: './characters/professor_idle.glb',       type: 'glb' },
 };
 const charModels = {};
 Object.entries(charPaths).forEach(([role, { path, type }]) => {
