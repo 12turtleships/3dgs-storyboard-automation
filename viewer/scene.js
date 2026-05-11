@@ -301,10 +301,12 @@ function tryLoad(role, path, type, onSuccess) {
   }, undefined, () => onSuccess(makeCharacterPlaceholder(role)));
 }
 
+// Characters loaded at runtime from GitHub CDN — keeps build under Cloudflare's 25 MB limit.
+const GITHUB_RAW = 'https://raw.githubusercontent.com/12turtleships/3dgs-storyboard-automation/master/characters';
 const charPaths = {
-  zara:      { path: '../characters/student_texting_walk.fbx', type: 'fbx' },
-  student:   { path: '../characters/student_texting_walk.fbx', type: 'fbx' },
-  professor: { path: './characters/professor_idle.glb',        type: 'glb' },
+  zara:      { path: `${GITHUB_RAW}/student_texting_walk.fbx`, type: 'fbx' },
+  student:   { path: `${GITHUB_RAW}/student_texting_walk.fbx`, type: 'fbx' },
+  professor: { path: `${GITHUB_RAW}/professor_idle.glb`,       type: 'glb' },
 };
 const charModels = {};
 Object.entries(charPaths).forEach(([role, { path, type }]) => {
