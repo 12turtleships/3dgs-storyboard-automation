@@ -313,12 +313,15 @@ function loadOneInstance(role, path, type, phaseOffset) {
     // Mixamo FBX is in centimetres; FBXLoader does not auto-scale → 0.01 cm→m.
     if (type === 'fbx') obj.scale.setScalar(0.01);
 
+    obj.userData.dbg = `clips:${clips.length}`;
+
     if (clips.length > 0) {
+      obj.userData.dbg += ` tracks:${clips[0].tracks.length} dur:${clips[0].duration.toFixed(1)}s`;
       const mixer = new THREE.AnimationMixer(obj);
       const action = mixer.clipAction(clips[0]);
       action.play();
-      // Stagger walk cycle phase so crowd members don't move in sync.
-      mixer.setTime(phaseOffset);
+      mixer.update(0.001); // force first pose so bind-pose isn't shown
+      if (phaseOffset > 0) mixer.setTime(phaseOffset);
       mixers.push(mixer);
       obj.userData.mixer = mixer;
     }
@@ -326,7 +329,6 @@ function loadOneInstance(role, path, type, phaseOffset) {
     charPool[role].push(obj);
     placeCharacters(SHOTS[currentShot]);
   }, undefined, () => {
-    // Loading failed — push null so the slot falls back to a placeholder.
     charPool[role].push(null);
     placeCharacters(SHOTS[currentShot]);
   });
@@ -514,11 +516,18 @@ function animate() {
   applyLook();
 
   const shot = SHOTS[currentShot];
-  let dbg = `lon(${lon.toFixed(1)}°)  lat(${lat.toFixed(1)}°)  fov(${camera.fov.toFixed(0)}°)`;
+  // Pool debug: show how many instances loaded and their animation state.
+  const poolInfo = Object.entries(charPool)
+    .filter(([, pool]) => pool.length > 0)
+    .map(([role, pool]) => {
+      const info = pool.map(o => o ? (o.userData.dbg || 'ok') : 'err').join('|');
+      return `${role}[${info}]`;
+    }).join('  ');
+  let dbg = `lon(${lon.toFixed(1)}°) lat(${lat.toFixed(1)}°) fov(${camera.fov.toFixed(0)}°)  ${poolInfo}`;
   if (selectedChar >= 0 && shot.characters[selectedChar]) {
     const c = shot.characters[selectedChar];
     dbg += `   [char ${selectedChar}] x(${(c.x||0).toFixed(2)}) y(${(c.y!=null?c.y:-1.7).toFixed(2)}) z(${(c.z||0).toFixed(2)})`;
-    dbg += '  Tab=next  WASD=x/z  QE=y  Shift=fine';
+    dbg += '  WASD=x/z  QE=y  Shift=fine';
   } else if (shot.characters.length > 0) {
     dbg += '   Tab=select character';
   }
