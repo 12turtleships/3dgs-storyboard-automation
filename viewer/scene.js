@@ -496,13 +496,13 @@ window.addEventListener('resize', () => {
 });
 
 // ---------------------------------------------------------------------------
-// Animation loop
+// Animation loop — use THREE.Timer (Clock is deprecated since r183)
 // ---------------------------------------------------------------------------
-const clock = new THREE.Clock();
+const timer = new THREE.Timer();
 
-function animate() {
-  requestAnimationFrame(animate);
-  const delta = clock.getDelta();
+renderer.setAnimationLoop(() => {
+  timer.update();
+  const delta = timer.getDelta();
   mixers.forEach(m => m.update(delta));
 
   if (!isDragging) {
@@ -534,7 +534,7 @@ function animate() {
   document.getElementById('cam-debug').textContent = dbg;
 
   renderer.render(scene, camera);
-}
+});
 
 // ---------------------------------------------------------------------------
 // Init — load panorama then start
@@ -547,7 +547,6 @@ camera.updateProjectionMatrix();
 
 loadPanorama(DEFAULT_PANO_URL).then(() => {
   buildNav();
-  animate();
   updateCharInfo(shot0);
   placeCharacters(shot0);
   document.getElementById('shot-label').textContent = `Shot ${shot0.id} — ${shot0.label}`;
