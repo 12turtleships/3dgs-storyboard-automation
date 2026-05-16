@@ -2,27 +2,27 @@ using System.Collections.Generic;
 using UnityEngine;
 
 /// <summary>
-/// Storyboard camera for TREE — Scene 01.
+/// StoryboardCamera — TREE Scene 01, Gaussian Splat viewer.
 ///
-/// HOW IT WORKS
-/// ────────────
-/// In Edit mode, frame shot 1B exactly as you want it (position, rotation, FOV).
-/// Press Play. The script snapshots that transform as the calibration baseline.
-/// Every other shot is expressed as a delta from that baseline:
-///   • pitchOffset  – degrees added to X rotation (+ = look down, − = look up)
-///   • yawOffset    – degrees added to Y rotation (+ = look right, − = look left)
-///   • fovOffset    – degrees added to FOV
+/// SETUP
+/// ─────
+/// 1. In Edit mode, orbit until you see the courtyard + tree roughly centred
+///    (shot 1B composition). Leave the camera there.
+/// 2. Press Play. The script snapshots that Edit-mode pose as the calibration
+///    baseline. Shot 1B loads with zero offsets (your Edit-mode view).
+/// 3. Arrow keys / on-screen buttons to step through shots.
 ///
-/// Press Left/Right arrow (or the on-screen buttons) to step through shots.
-/// The transition animates smoothly via Lerp.
+/// LIVE TUNING (per shot)
+/// ──────────────────────
+///   I / K   → pitch up / down  (0.5° per press)
+///   J / L   → yaw  left / right
+///   U / O   → FOV  decrease / increase
+///   Hold Shift for 5× speed (2.5° per press)
+///   Z       → print current shot offsets to Console (copy back to shotList)
+///   R       → reset current shot offsets to zero
 ///
-/// TUNING WORKFLOW
-/// ───────────────
-/// 1. In Edit mode, aim the camera at the tree courtyard for shot 1B.
-/// 2. Press Play → shot 1B loads with zero offsets (your Edit-mode pose).
-/// 3. Navigate to the shot you want to tune.
-/// 4. Adjust pitchOffset / yawOffset / fovOffset in the Inspector (live).
-/// 5. Copy the values back into the shotList entries below.
+/// The top HUD shows absolute world rotation so you can see exactly where you
+/// are in the PLY coordinate frame.
 /// </summary>
 [RequireComponent(typeof(Camera))]
 public class StoryboardCamera : MonoBehaviour
@@ -33,171 +33,177 @@ public class StoryboardCamera : MonoBehaviour
     public class ShotData
     {
         public string id;
-        public string label;
+        [TextArea(1,2)] public string label;
         [Tooltip("Degrees added to baseline Y rotation. + = look right.")]
         public float yawOffset;
-        [Tooltip("Degrees added to baseline X rotation. + = look down.")]
+        [Tooltip("Degrees added to baseline X rotation. + = look down, − = look up.")]
         public float pitchOffset;
         [Tooltip("Degrees added to baseline FOV.")]
         public float fovOffset;
     }
 
-    [Header("Shots")]
+    [Header("Shots — tune pitchOffset / yawOffset / fovOffset per shot")]
     public List<ShotData> shotList = new List<ShotData>
     {
-        new ShotData { id = "1A", label = "Full Campus",           yawOffset =   0f, pitchOffset =   0f, fovOffset = +15f },
-        new ShotData { id = "1B", label = "Courtyard Wide",        yawOffset =   0f, pitchOffset =   0f, fovOffset =   0f },
-        new ShotData { id = "1C", label = "Worm's Eye — Monolith", yawOffset =   0f, pitchOffset = -70f, fovOffset =  -5f },
-        new ShotData { id = "1D", label = "Canopy Upshot",         yawOffset =   0f, pitchOffset = -82f, fovOffset =  +5f },
-        new ShotData { id = "1E", label = "Root Level",            yawOffset =   0f, pitchOffset = +35f, fovOffset =  -5f },
-        new ShotData { id = "1F", label = "Transition — Oblivious",yawOffset =   0f, pitchOffset =   0f, fovOffset = +10f },
+        // Start all at zero — use I/K/J/L/U/O keys to find the right view,
+        // then press Z to log the values and copy them back here.
+        new ShotData { id = "1A", label = "Full Campus — Entire World Revealed",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset = +15f },
+        new ShotData { id = "1B", label = "Courtyard Wide — Tree as Undeniable Center",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset =   0f },
+        new ShotData { id = "1C", label = "Worm's Eye — Monolith Reveal",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  -5f },
+        new ShotData { id = "1D", label = "Canopy Upshot — Natural Cathedral",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  +5f },
+        new ShotData { id = "1E", label = "Root Level — Nature Reclaiming Stone",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  -5f },
+        new ShotData { id = "1F", label = "Transition — Campus Full, Students Blind",
+                       yawOffset = 0f, pitchOffset = 0f, fovOffset = +10f },
     };
 
     [Header("Transition")]
-    [Tooltip("How fast shots blend. Higher = snappier.")]
-    [Range(0.5f, 20f)] public float lerpSpeed = 5f;
+    [Range(1f, 20f)] public float lerpSpeed = 6f;
 
-    [Header("Debug — live-tune the current shot")]
-    [Tooltip("Adjust these at runtime to tune the selected shot, then copy values back.")]
-    public float pitchOffset;
-    public float yawOffset;
-    public float fovOffset;
+    [Header("Tuning step (° per keypress)")]
+    public float tuneStep = 0.5f;  // held Shift = ×5
 
     // ── Internal state ───────────────────────────────────────────────────────
 
     Camera  _cam;
-    int     _currentShot = 1;  // start on shot 1B (index 1)
+    int     _current = 1;  // start on 1B
 
-    // Baseline captured from Edit-mode camera pose when Play is pressed.
-    Vector3    _basePosition;
-    Quaternion _baseRotation;
+    Vector3    _basePos;
+    Quaternion _baseRot;
     float      _baseFov;
 
-    // Current animated values (Euler angles for smooth wrap).
-    float _curPitch;
-    float _curYaw;
-    float _curFov;
+    float _curPitch, _curYaw, _curFov;
 
     // ── Unity lifecycle ───────────────────────────────────────────────────────
 
     void Awake()
     {
-        _cam = GetComponent<Camera>();
+        _cam     = GetComponent<Camera>();
+        _basePos = transform.position;
+        _baseRot = transform.rotation;
+        _baseFov = _cam.fieldOfView;
 
-        // Snapshot the Edit-mode pose as the calibration baseline.
-        _basePosition = transform.position;
-        _baseRotation = transform.rotation;
-        _baseFov      = _cam.fieldOfView;
-
-        // Extract Euler angles so we can add offsets sensibly.
-        Vector3 baseEuler = _baseRotation.eulerAngles;
-        _curPitch = baseEuler.x;
-        _curYaw   = baseEuler.y;
+        Vector3 e = _baseRot.eulerAngles;
+        _curPitch = e.x;
+        _curYaw   = e.y;
         _curFov   = _baseFov;
 
-        ApplyShot(_currentShot, snap: true);
+        SnapToShot(_current);
     }
 
     void Update()
     {
-        // Keyboard navigation.
+        float step = tuneStep * (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift) ? 5f : 1f);
+
+        // ── Shot navigation ─────────────────────────────────────────────────
         if (Input.GetKeyDown(KeyCode.RightArrow) || Input.GetKeyDown(KeyCode.DownArrow))
-            GoToShot((_currentShot + 1) % shotList.Count);
-        if (Input.GetKeyDown(KeyCode.LeftArrow) || Input.GetKeyDown(KeyCode.UpArrow))
-            GoToShot((_currentShot - 1 + shotList.Count) % shotList.Count);
+            GoToShot((_current + 1) % shotList.Count);
+        if (Input.GetKeyDown(KeyCode.LeftArrow)  || Input.GetKeyDown(KeyCode.UpArrow))
+            GoToShot((_current - 1 + shotList.Count) % shotList.Count);
 
-        // Propagate any Inspector live-tweaks to the current shot entry.
-        shotList[_currentShot].pitchOffset = pitchOffset;
-        shotList[_currentShot].yawOffset   = yawOffset;
-        shotList[_currentShot].fovOffset   = fovOffset;
+        // Direct shot select: 1–6 keys
+        for (int i = 0; i < shotList.Count && i < 9; i++)
+            if (Input.GetKeyDown(KeyCode.Alpha1 + i)) GoToShot(i);
 
-        // Smooth lerp toward target.
-        ShotData s      = shotList[_currentShot];
-        Vector3 baseEuler = _baseRotation.eulerAngles;
+        // ── Live tune ───────────────────────────────────────────────────────
+        ShotData s = shotList[_current];
 
-        float targetPitch = baseEuler.x + s.pitchOffset;
-        float targetYaw   = baseEuler.y + s.yawOffset;
-        float targetFov   = _baseFov    + s.fovOffset;
+        if (Input.GetKey(KeyCode.I)) s.pitchOffset -= step;   // look up
+        if (Input.GetKey(KeyCode.K)) s.pitchOffset += step;   // look down
+        if (Input.GetKey(KeyCode.J)) s.yawOffset   -= step;   // yaw left
+        if (Input.GetKey(KeyCode.L)) s.yawOffset   += step;   // yaw right
+        if (Input.GetKey(KeyCode.U)) s.fovOffset   -= step;   // narrow
+        if (Input.GetKey(KeyCode.O)) s.fovOffset   += step;   // widen
 
-        _curPitch = Mathf.LerpAngle(_curPitch, targetPitch, Time.deltaTime * lerpSpeed);
-        _curYaw   = Mathf.LerpAngle(_curYaw,   targetYaw,   Time.deltaTime * lerpSpeed);
-        _curFov   = Mathf.Lerp(_curFov, targetFov, Time.deltaTime * lerpSpeed);
+        // Print / Reset
+        if (Input.GetKeyDown(KeyCode.Z)) LogCurrentShot();
+        if (Input.GetKeyDown(KeyCode.R)) { s.pitchOffset = 0; s.yawOffset = 0; s.fovOffset = 0; }
 
-        transform.rotation     = Quaternion.Euler(_curPitch, _curYaw, 0f);
-        transform.position     = _basePosition;
-        _cam.fieldOfView       = _curFov;
+        // ── Smooth lerp to target ────────────────────────────────────────────
+        Vector3 be   = _baseRot.eulerAngles;
+        float tPitch = be.x + s.pitchOffset;
+        float tYaw   = be.y + s.yawOffset;
+        float tFov   = _baseFov + s.fovOffset;
+
+        _curPitch = Mathf.LerpAngle(_curPitch, tPitch, Time.deltaTime * lerpSpeed);
+        _curYaw   = Mathf.LerpAngle(_curYaw,   tYaw,   Time.deltaTime * lerpSpeed);
+        _curFov   = Mathf.Lerp(_curFov, tFov, Time.deltaTime * lerpSpeed);
+
+        transform.SetPositionAndRotation(_basePos, Quaternion.Euler(_curPitch, _curYaw, 0f));
+        _cam.fieldOfView = _curFov;
     }
 
-    // ── Public API ────────────────────────────────────────────────────────────
+    // ── API ───────────────────────────────────────────────────────────────────
 
-    public void GoToShot(int index)
+    public void GoToShot(int i)
     {
-        _currentShot = Mathf.Clamp(index, 0, shotList.Count - 1);
-        // Sync Inspector live-tune fields.
-        pitchOffset = shotList[_currentShot].pitchOffset;
-        yawOffset   = shotList[_currentShot].yawOffset;
-        fovOffset   = shotList[_currentShot].fovOffset;
-        Debug.Log($"[StoryboardCamera] Shot {shotList[_currentShot].id} — {shotList[_currentShot].label}");
+        _current = Mathf.Clamp(i, 0, shotList.Count - 1);
+        Debug.Log($"[StoryboardCamera] → Shot {shotList[_current].id}");
     }
 
-    void ApplyShot(int index, bool snap = false)
+    void SnapToShot(int i)
     {
-        _currentShot = index;
-        pitchOffset  = shotList[index].pitchOffset;
-        yawOffset    = shotList[index].yawOffset;
-        fovOffset    = shotList[index].fovOffset;
-
-        if (snap)
-        {
-            ShotData s      = shotList[index];
-            Vector3 baseEuler = _baseRotation.eulerAngles;
-            _curPitch = baseEuler.x + s.pitchOffset;
-            _curYaw   = baseEuler.y + s.yawOffset;
-            _curFov   = _baseFov    + s.fovOffset;
-            transform.rotation = Quaternion.Euler(_curPitch, _curYaw, 0f);
-            _cam.fieldOfView   = _curFov;
-        }
+        _current = i;
+        ShotData s  = shotList[i];
+        Vector3 be  = _baseRot.eulerAngles;
+        _curPitch   = be.x + s.pitchOffset;
+        _curYaw     = be.y + s.yawOffset;
+        _curFov     = _baseFov + s.fovOffset;
+        transform.SetPositionAndRotation(_basePos, Quaternion.Euler(_curPitch, _curYaw, 0f));
+        _cam.fieldOfView = _curFov;
     }
 
-    // ── On-screen UI ──────────────────────────────────────────────────────────
+    void LogCurrentShot()
+    {
+        ShotData s = shotList[_current];
+        Debug.Log($"[StoryboardCamera] {s.id}  pitchOffset={s.pitchOffset:F1}  yawOffset={s.yawOffset:F1}  fovOffset={s.fovOffset:F1}" +
+                  $"  |  abs rot ({_curPitch:F1}, {_curYaw:F1}, 0)  fov {_curFov:F1}");
+    }
+
+    // ── On-screen HUD ─────────────────────────────────────────────────────────
 
     void OnGUI()
     {
-        GUIStyle label = new GUIStyle(GUI.skin.label)
-        {
-            fontSize  = 13,
-            alignment = TextAnchor.UpperLeft,
-        };
-        GUIStyle btn = new GUIStyle(GUI.skin.button) { fontSize = 12 };
+        GUIStyle row = new GUIStyle(GUI.skin.label) { fontSize = 12 };
+        GUIStyle btn = new GUIStyle(GUI.skin.button) { fontSize = 11 };
 
-        // Shot label bar.
-        ShotData cur = shotList[_currentShot];
-        GUI.Label(new Rect(10, 10, 600, 24),
-            $"Shot {cur.id} — {cur.label}   |   pitch{cur.pitchOffset:+0.0;-0.0;0}°  yaw{cur.yawOffset:+0.0;-0.0;0}°  fov{cur.fovOffset:+0.0;-0.0;0}°",
-            label);
+        ShotData cur = shotList[_current];
 
-        // Prev / Next buttons.
-        if (GUI.Button(new Rect(10, 38, 60, 24), "◀ Prev", btn))
-            GoToShot((_currentShot - 1 + shotList.Count) % shotList.Count);
-        if (GUI.Button(new Rect(76, 38, 60, 24), "Next ▶", btn))
-            GoToShot((_currentShot + 1) % shotList.Count);
+        // Shot label
+        GUI.Label(new Rect(8, 6, 700, 20), $"Shot {cur.id} — {cur.label}", row);
 
-        // Shot selector buttons.
-        float x = 150f;
+        // Absolute rotation debug (key for tuning)
+        GUI.Label(new Rect(8, 24, 700, 20),
+            $"abs rot ({_curPitch:F1}, {_curYaw:F1}, 0)  fov {_curFov:F1}°  |  " +
+            $"offsets  pitch{cur.pitchOffset:+0.0;-0.0;+0.0}  yaw{cur.yawOffset:+0.0;-0.0;+0.0}  fov{cur.fovOffset:+0.0;-0.0;+0.0}", row);
+
+        // Baseline reminder
+        GUI.Label(new Rect(8, 42, 700, 20),
+            $"eyeLevel: {_basePos}  |  baseRot: {_baseRot.eulerAngles}  baseFOV: {_baseFov}°", row);
+
+        // Controls reminder
+        GUI.Label(new Rect(8, 60, 700, 20),
+            "← → shots  |  I/K: pitch  J/L: yaw  U/O: FOV  (Shift=fast)  |  Z: log  R: reset", row);
+
+        // Prev / Next
+        if (GUI.Button(new Rect(8, 80, 50, 22), "◀", btn))
+            GoToShot((_current - 1 + shotList.Count) % shotList.Count);
+        if (GUI.Button(new Rect(62, 80, 50, 22), "▶", btn))
+            GoToShot((_current + 1) % shotList.Count);
+
+        // Per-shot buttons
+        float x = 120f;
         for (int i = 0; i < shotList.Count; i++)
         {
-            bool active = (i == _currentShot);
             Color prev = GUI.backgroundColor;
-            GUI.backgroundColor = active ? Color.yellow : Color.white;
-            if (GUI.Button(new Rect(x, 38, 44, 24), shotList[i].id, btn))
-                GoToShot(i);
+            GUI.backgroundColor = (i == _current) ? Color.yellow : Color.white;
+            if (GUI.Button(new Rect(x, 80, 38, 22), shotList[i].id, btn)) GoToShot(i);
             GUI.backgroundColor = prev;
-            x += 48f;
+            x += 42f;
         }
-
-        // Live-tune reminder.
-        GUI.Label(new Rect(10, 66, 700, 20),
-            "Tune: adjust pitchOffset / yawOffset / fovOffset in Inspector → copy values back to shotList",
-            label);
     }
 }
