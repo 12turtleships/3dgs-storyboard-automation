@@ -45,20 +45,20 @@ public class StoryboardCamera : MonoBehaviour
     [Header("Shots — tune pitchOffset / yawOffset / fovOffset per shot")]
     public List<ShotData> shotList = new List<ShotData>
     {
-        // Start all at zero — use I/K/J/L/U/O keys to find the right view,
-        // then press Z to log the values and copy them back here.
+        // Values confirmed in-session via Z-log at baseRot (328.0, 182.6, 0) baseFOV 60°.
+        // Remaining shots still need tuning — use I/K/J/L/U/O then press Z to log.
         new ShotData { id = "1A", label = "Full Campus — Entire World Revealed",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset = +15f },
+                       yawOffset = 0f,  pitchOffset =  0f,   fovOffset = +15f },
         new ShotData { id = "1B", label = "Courtyard Wide — Tree as Undeniable Center",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset =   0f },
-        new ShotData { id = "1C", label = "Worm's Eye — Monolith Reveal",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  -5f },
+                       yawOffset = 0f,  pitchOffset =  0f,   fovOffset =   0f },
+        new ShotData { id = "1C", label = "Worm's Eye — Monolith Reveal",          // ✓ confirmed
+                       yawOffset = 6f,  pitchOffset = 13.5f, fovOffset =  -5f },
         new ShotData { id = "1D", label = "Canopy Upshot — Natural Cathedral",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  +5f },
+                       yawOffset = 6f,  pitchOffset = 13.5f, fovOffset =  +5f },   // start from 1C, widen
         new ShotData { id = "1E", label = "Root Level — Nature Reclaiming Stone",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset =  -5f },
+                       yawOffset = 6f,  pitchOffset = 30f,   fovOffset =  -5f },   // look further down
         new ShotData { id = "1F", label = "Transition — Campus Full, Students Blind",
-                       yawOffset = 0f, pitchOffset = 0f, fovOffset = +10f },
+                       yawOffset = 0f,  pitchOffset =  0f,   fovOffset = +10f },
     };
 
     [Header("Transition")]
