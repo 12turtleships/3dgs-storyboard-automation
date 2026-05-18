@@ -51,7 +51,7 @@ public class StoryboardCamera : MonoBehaviour
         new ShotData { id = "1C", label = "Canopy — Looking Up",
                        pitchOffset = -3.8f,  yawOffset =   0f, fovOffset = -10f },
         new ShotData { id = "1D", label = "Roots — Looking Down",
-                       pitchOffset = +17.4f, yawOffset =   0f, fovOffset = -10f },
+                       pitchOffset = +126.40f, yawOffset = 0f, fovOffset = -10f },
         new ShotData { id = "1E", label = "Campus Right — Pan 90°",
                        pitchOffset = -1.9f,  yawOffset = +90f, fovOffset =   0f },
         new ShotData { id = "1F", label = "Campus Left — Pan 90°",
