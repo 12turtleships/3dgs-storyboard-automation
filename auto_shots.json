@@ -1,0 +1,68 @@
+[
+  {
+    "id": "1A",
+    "label": "Campus Wide \u2014 Establishing",
+    "rotation_offset": [
+      -1.9,
+      0,
+      0
+    ],
+    "fov_offset": 25,
+    "transitionDuration": 2.0
+  },
+  {
+    "id": "1B",
+    "label": "Courtyard \u2014 Tree as Center",
+    "rotation_offset": [
+      -1.9,
+      0,
+      0
+    ],
+    "fov_offset": 0,
+    "transitionDuration": 1.5
+  },
+  {
+    "id": "1C",
+    "label": "Canopy \u2014 Looking Up",
+    "rotation_offset": [
+      -3.8,
+      0,
+      0
+    ],
+    "fov_offset": -10,
+    "transitionDuration": 1.5
+  },
+  {
+    "id": "1D",
+    "label": "Roots \u2014 Looking Down",
+    "rotation_offset": [
+      17.4,
+      0,
+      0
+    ],
+    "fov_offset": -10,
+    "transitionDuration": 1.5
+  },
+  {
+    "id": "1E",
+    "label": "Campus Right \u2014 Pan 90\u00b0",
+    "rotation_offset": [
+      -1.9,
+      90,
+      0
+    ],
+    "fov_offset": 0,
+    "transitionDuration": 2.0
+  },
+  {
+    "id": "1F",
+    "label": "Campus Left \u2014 Pan 90\u00b0",
+    "rotation_offset": [
+      -1.9,
+      -90,
+      0
+    ],
+    "fov_offset": 0,
+    "transitionDuration": 2.0
+  }
+]
