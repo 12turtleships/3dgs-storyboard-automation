@@ -6,3 +6,10 @@ __pycache__/
 story_plot.py
 viewer/node_modules/
 viewer/dist/
+
+# Large binary / generated files — not committed to git
+*.ply
+*.spz
+.spz_cache/
+*.png
+*.jpg

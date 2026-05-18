@@ -1,0 +1,133 @@
+{
+  "capture_position_ply": [
+    5.6,
+    0.0,
+    9.8
+  ],
+  "ground_y_ply": 20.89391326904297,
+  "sky_y_ply": -0.7529296875,
+  "bbox": {
+    "min": [
+      -26.546,
+      -0.753,
+      -16.875
+    ],
+    "max": [
+      38.198,
+      65.012,
+      36.555
+    ]
+  },
+  "objects": [
+    {
+      "id": "tree_0",
+      "type": "tree",
+      "n_points": 39653,
+      "centroid": [
+        -0.113,
+        -0.37,
+        0.06
+      ],
+      "bbox_min": [
+        -2.343,
+        -0.753,
+        -2.93
+      ],
+      "bbox_max": [
+        1.901,
+        3.537,
+        3.003
+      ],
+      "extent_xyz": [
+        4.244,
+        4.29,
+        5.933
+      ],
+      "footprint_r": 2.967,
+      "aspect_ratio": 0.723,
+      "detection": "colour+eps=0.8"
+    },
+    {
+      "id": "building_0",
+      "type": "building",
+      "n_points": 51600,
+      "centroid": [
+        -0.021,
+        -0.21,
+        -0.03
+      ],
+      "bbox_min": [
+        -3.493,
+        -0.736,
+        -3.603
+      ],
+      "bbox_max": [
+        2.749,
+        4.009,
+        3.93
+      ],
+      "extent_xyz": [
+        6.243,
+        4.745,
+        7.532
+      ],
+      "footprint_r": 3.766,
+      "aspect_ratio": 0.63
+    },
+    {
+      "id": "building_1",
+      "type": "building",
+      "n_points": 41,
+      "centroid": [
+        3.025,
+        2.344,
+        -3.748
+      ],
+      "bbox_min": [
+        2.554,
+        1.996,
+        -4.214
+      ],
+      "bbox_max": [
+        3.526,
+        2.655,
+        -3.323
+      ],
+      "extent_xyz": [
+        0.971,
+        0.658,
+        0.892
+      ],
+      "footprint_r": 0.486,
+      "aspect_ratio": 0.678
+    }
+  ],
+  "main_tree": {
+    "id": "tree_0",
+    "type": "tree",
+    "n_points": 39653,
+    "centroid": [
+      -0.113,
+      -0.37,
+      0.06
+    ],
+    "bbox_min": [
+      -2.343,
+      -0.753,
+      -2.93
+    ],
+    "bbox_max": [
+      1.901,
+      3.537,
+      3.003
+    ],
+    "extent_xyz": [
+      4.244,
+      4.29,
+      5.933
+    ],
+    "footprint_r": 2.967,
+    "aspect_ratio": 0.723,
+    "detection": "colour+eps=0.8"
+  }
+}
